@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package users;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = ".;users_pb";
+
+
+service UsersService {
+    rpc Create (CreateUserRequest) returns (CreateUserResponse);
+    rpc Get (GetUserRequest) returns (GetUserResponse); // one or more
+    rpc Update (UpdateUserRequest) returns (UpdateUserResponse);
+    rpc Delete (DeleteUserRequest) returns (DeleteUserResponse);
+}
+
+message User {
+    int64 id = 1;
+    string name = 2;
+    string address = 3;
+    google.protobuf.Timestamp date = 4;
+    repeated int64 order_ids = 5;
+    // also have token in database
+}
+
+// Create
+
+message CreateUserRequest {
+    string name = 1;
+    string pass = 2;
+    string address = 3;
+}
+
+message CreateUserResponse {
+    string token = 1;
+}
+
+// Get
+
+message GetUserRequest {
+    repeated int64 ids = 1;
+}
+
+message GetUserResponse {
+    repeated User users = 1;
+}
+
+// Update
+
+message UpdateUserRequest {
+    string token = 1;
+    int64 id = 2;
+    User user = 3;
+}
+
+message UpdateUserResponse {
+    User user = 1;
+}
+
+// Delete
+
+message DeleteUserRequest {
+    string token = 1;
+    int64 id = 2;
+}
+
+message DeleteUserResponse {
+    User user = 1;
+}

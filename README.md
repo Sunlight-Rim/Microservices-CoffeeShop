@@ -4,12 +4,13 @@ Simple application with microservice architecture pattern on Go.
 
 ## Description
 ### **Coffee shop web-application.**
-There are Orders and Users services that realizes CRUD operations. Both services connected to each other via gRPC and calling externally via REST through API Gateway.
+You can register, login, order some coffee, view the history of your coffee orders, list other users and do some related actions.
 
 ## Structure
 Application architecture:
 ![map](https://i.ibb.co/mT5MvWY/Frame-6-2.jpg)
 
+There are Orders and Users services that realizes CRUD operations. Both services are connected to each other via gRPC and are calling externally via REST through API Gateway. \
 You can see all available API methods in `/docs/documentation.md`. \
 The folders structure was inspired by [Standard Go Project Layout](https://github.com/golang-standards/project-layout) and persist in each service. Here are:
 - `cmd`: contains entry point of application
