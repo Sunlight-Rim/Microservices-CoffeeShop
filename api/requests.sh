@@ -1,4 +1,4 @@
-# For vscode https://marketplace.visualstudio.com/items?itemName=humao.rest-client
+# For vscode you can use https://marketplace.visualstudio.com/items?itemName=humao.rest-client
 
 ### GET all Orders
 curl http://localhost:8080/orders
