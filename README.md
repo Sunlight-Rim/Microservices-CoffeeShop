@@ -16,9 +16,9 @@ The folders structure was inspired by [Standard Go Project Layout](https://githu
 - `cmd`: contains entry point of application
 - `config`: stores all app configurations
 - `docs`: complete documentation of app
-- `proto`: gRPC definitions for microservices
-- `internal`: implementation of microservices methods
+- `internal/<service>/proto`: gRPC definitions for microservices
 - `internal/<service>/pb`: generated code from protobuffers
+- `internal/<service>`: implementation of microservices methods
 - `api`: some REST requests examples
 
 `go.mod` and `go.sum` is a Go Modules files.
