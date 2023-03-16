@@ -24,7 +24,7 @@ message Order {
         PENDING = 0;
         DELIVERED = 1;
     }
-    int64 id = 1;
+    int64 order_id = 1;
     repeated Coffee coffees = 2;
     float total = 3;
     google.protobuf.Timestamp date = 4;
@@ -34,7 +34,9 @@ message Order {
 // Create
 
 message CreateOrderRequest {
-    repeated Coffee coffees = 1;
+    string token = 1;
+    int64 user_id = 2;
+    repeated Coffee coffees = 3;
 }
 
 message CreateOrderResponse {
@@ -44,7 +46,9 @@ message CreateOrderResponse {
 // Get
 
 message GetOrderRequest {
-    repeated int64 ids = 1;
+    string token = 1;
+    int64 user_id = 2;
+    repeated int64 ids = 3;
 }
 
 message GetOrderResponse {
@@ -54,8 +58,10 @@ message GetOrderResponse {
 // Update
 
 message UpdateOrderRequest {
-    int64 id = 1;
-    repeated Coffee coffees = 2;
+    string token = 1;
+    int64 user_id = 2;
+    int64 order_id = 3;
+    repeated Coffee coffees = 4;
 }
 
 message UpdateOrderResponse {
@@ -65,7 +71,9 @@ message UpdateOrderResponse {
 // Delete
 
 message DeleteOrderRequest {
-    int64 id = 1;
+    string token = 1;
+    int64 user_id = 2;
+    int64 order_id = 3;
 }
 
 message DeleteOrderResponse {
