@@ -45,7 +45,7 @@ func New() Gateway {
 	// Orders routing
 	routerOrders := router.Group("/order")
 	{
-		routerOrders.POST("", g.createOrder)
+		routerOrders.POST("", marshalMiddleware(&orders_pb.CreateOrderRequest{}), g.createOrder)
 		routerOrders.GET(":id", g.getOrder)
 		routerOrders.GET("", g.listOrder)
 		routerOrders.PUT(":id", g.updateOrder)
@@ -58,23 +58,36 @@ func (g Gateway) Start() error {
 	return g.server.ListenAndServe()
 }
 
+/// MIDDLEWARE
+
+func marshalMiddleware(req *orders_pb.CreateOrderRequest) gin.HandlerFunc {
+	fn := func(c *gin.Context) {
+		err := jsonpb.Unmarshal(c.Request.Body, req)
+		if err != nil {
+			c.String(http.StatusInternalServerError, "Error creating order request")
+		}
+		c.Set("req", req)
+
+		c.Next()
+
+		resp, _ := c.MustGet("resp").(*orders_pb.CreateOrderResponse)
+		m := &jsonpb.Marshaler{}
+		if err := m.Marshal(c.Writer, resp); err != nil {
+			c.String(http.StatusInternalServerError, "Error sending order response")
+		}
+	}
+	return fn
+}
+
 /// API METHODS
 
 func (g Gateway) createOrder(c *gin.Context) {
-	var req orders_pb.CreateOrderRequest
-
-	err := jsonpb.Unmarshal(c.Request.Body, &req)
-	if err != nil {
-		c.String(http.StatusInternalServerError, "Error creating order request")
-	}
-	resp, err := g.clientOrders.Create(c.Request.Context(), &req)
+	req, _ := c.MustGet("req").(*orders_pb.CreateOrderRequest)
+	resp, err := g.clientOrders.Create(c.Request.Context(), req)
 	if err != nil {
 		c.String(http.StatusInternalServerError, "Error creating order")
 	}
-	m := &jsonpb.Marshaler{}
-	if err := m.Marshal(c.Writer, resp); err != nil {
-		c.String(http.StatusInternalServerError, "Error sending order response")
-	}
+	c.Set("resp", resp)
 }
 
 func (g Gateway) getOrder(c *gin.Context) {
