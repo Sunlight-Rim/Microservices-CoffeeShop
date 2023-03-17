@@ -15,18 +15,17 @@ service UsersService {
 }
 
 message User {
-    int64 user_id = 1;
-    string name = 2;
-    string address = 3;
-    google.protobuf.Timestamp date = 4;
-    repeated int64 order_ids = 5;
+    string username = 1;
+    string address = 2;
+    google.protobuf.Timestamp date = 3;
+    repeated int64 order_ids = 4;
     // also have token in database
 }
 
 // Create
 
 message CreateUserRequest {
-    string name = 1;
+    string username = 1;
     string pass = 2;
     string address = 3;
 }
@@ -38,7 +37,7 @@ message CreateUserResponse {
 // Get
 
 message GetUserRequest {
-    repeated int64 user_ids = 1;
+    repeated int64 usernames = 1;
 }
 
 message GetUserResponse {
@@ -48,8 +47,8 @@ message GetUserResponse {
 // Update
 
 message UpdateUserRequest {
-    string token = 1;
-    int64 user_id = 2;
+    string username = 1;
+    string token = 2;
     User user = 3;
 }
 
@@ -60,8 +59,8 @@ message UpdateUserResponse {
 // Delete
 
 message DeleteUserRequest {
-    string token = 1;
-    int64 user_id = 2;
+    string username = 1;
+    string token = 2;
 }
 
 message DeleteUserResponse {
