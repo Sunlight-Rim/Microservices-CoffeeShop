@@ -16,7 +16,7 @@ service OrdersService {
 
 message Coffee {
     string type = 1;
-    float price = 2;
+    int32 sugar = 2;
 }
 
 message Order {
@@ -34,9 +34,8 @@ message Order {
 // Create
 
 message CreateOrderRequest {
-    string username = 1;
-    string token = 2;
-    repeated Coffee coffees = 3;
+    string token = 1;
+    repeated Coffee coffees = 2;
 }
 
 message CreateOrderResponse {
@@ -46,9 +45,8 @@ message CreateOrderResponse {
 // Get
 
 message GetOrderRequest {
-    string username = 1;
-    string token = 2;
-    repeated int64 ids = 3;
+    string token = 1;
+    repeated int64 ids = 2;
 }
 
 message GetOrderResponse {
@@ -58,10 +56,9 @@ message GetOrderResponse {
 // Update
 
 message UpdateOrderRequest {
-    string username = 1;
-    string token = 2;
-    int64 id = 3;
-    repeated Coffee coffees = 4;
+    string token = 1;
+    int64 id = 2;
+    repeated Coffee coffees = 3;
 }
 
 message UpdateOrderResponse {
@@ -71,9 +68,8 @@ message UpdateOrderResponse {
 // Delete
 
 message DeleteOrderRequest {
-    string username = 1;
-    string token = 2;
-    int64 id = 3;
+    string token = 1;
+    int64 id = 2;
 }
 
 message DeleteOrderResponse {

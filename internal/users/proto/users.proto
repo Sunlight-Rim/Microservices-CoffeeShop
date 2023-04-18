@@ -31,7 +31,7 @@ message CreateUserRequest {
 }
 
 message CreateUserResponse {
-    User user = 1;
+    string token = 1;
 }
 
 // Get
@@ -47,9 +47,8 @@ message GetUserResponse {
 // Update
 
 message UpdateUserRequest {
-    string username = 1;
-    string token = 2;
-    User user = 3;
+    string token = 1;
+    User user = 2;
 }
 
 message UpdateUserResponse {
@@ -59,8 +58,7 @@ message UpdateUserResponse {
 // Delete
 
 message DeleteUserRequest {
-    string username = 1;
-    string token = 2;
+    string token = 1;
 }
 
 message DeleteUserResponse {

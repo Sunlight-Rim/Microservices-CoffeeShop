@@ -21,12 +21,12 @@ const ( // TODO: move to config
 
 /// SERVER DEFINITION
 
-type Gateway struct {
+type GatewayServer struct {
 	server       *http.Server
 	clientOrders orders_pb.OrdersServiceClient
 }
 
-func New() Gateway {
+func New() GatewayServer {
 	// Connect to gRPC server
 	conn, err := grpc.Dial(grpcAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -35,7 +35,7 @@ func New() Gateway {
 	client := orders_pb.NewOrdersServiceClient(conn)
 	// REST router
 	router := gin.Default()
-	g := Gateway{
+	g := GatewayServer{
 		server: &http.Server{
 			Addr:    gwAddress,
 			Handler: router,
@@ -45,7 +45,7 @@ func New() Gateway {
 	// Orders routing
 	routerOrders := router.Group("/order")
 	{
-		routerOrders.POST("", marshalMiddleware(&orders_pb.CreateOrderRequest{}), g.createOrder)
+		routerOrders.POST("", g.createOrder)
 		routerOrders.GET(":id", g.getOrder)
 		routerOrders.GET("", g.listOrder)
 		routerOrders.PUT(":id", g.updateOrder)
@@ -54,55 +54,43 @@ func New() Gateway {
 	return g
 }
 
-func (g Gateway) Start() error {
+func (g GatewayServer) Start() error {
 	return g.server.ListenAndServe()
 }
 
-/// MIDDLEWARE
+/// API METHODS (REST)
 
-func marshalMiddleware(req *orders_pb.CreateOrderRequest) gin.HandlerFunc {
-	fn := func(c *gin.Context) {
-		err := jsonpb.Unmarshal(c.Request.Body, req)
-		if err != nil {
-			c.String(http.StatusInternalServerError, "Error creating order request")
-		}
-		c.Set("req", req)
-
-		c.Next()
-
-		resp, _ := c.MustGet("resp").(*orders_pb.CreateOrderResponse)
-		m := &jsonpb.Marshaler{}
-		if err := m.Marshal(c.Writer, resp); err != nil {
-			c.String(http.StatusInternalServerError, "Error sending order response")
-		}
+func (g GatewayServer) createOrder(c *gin.Context) {
+	var req orders_pb.CreateOrderRequest
+	// Request unmarshal
+	if err := jsonpb.Unmarshal(c.Request.Body, &req); err != nil {
+		c.String(http.StatusInternalServerError, "Error in your order request")
 	}
-	return fn
-}
-
-/// API METHODS
-
-func (g Gateway) createOrder(c *gin.Context) {
-	req, _ := c.MustGet("req").(*orders_pb.CreateOrderRequest)
-	resp, err := g.clientOrders.Create(c.Request.Context(), req)
+	// Creating order using Orders service
+	resp, err := g.clientOrders.Create(c.Request.Context(), &req)
 	if err != nil {
 		c.String(http.StatusInternalServerError, "Error creating order")
 	}
-	c.Set("resp", resp)
+	// Send response
+	m := &jsonpb.Marshaler{}
+	if err := m.Marshal(c.Writer, resp); err != nil {
+		c.String(http.StatusInternalServerError, "Error sending order response")
+	}
 }
 
-func (g Gateway) getOrder(c *gin.Context) {
+func (g GatewayServer) getOrder(c *gin.Context) {
 	log.Printf("id is: %v", c.Param("id"))
+	c.String(http.StatusNotImplemented, "not implemented yets")
+}
+
+func (g GatewayServer) listOrder(c *gin.Context) {
+	c.String(http.StatusNotImplemented, "not implemented yetx")
+}
+
+func (g GatewayServer) updateOrder(c *gin.Context) {
 	c.String(http.StatusNotImplemented, "not implemented yet")
 }
 
-func (g Gateway) listOrder(c *gin.Context) {
-	c.String(http.StatusNotImplemented, "not implemented yet")
-}
-
-func (g Gateway) updateOrder(c *gin.Context) {
-	c.String(http.StatusNotImplemented, "not implemented yet")
-}
-
-func (g Gateway) deleteOrder(c *gin.Context) {
+func (g GatewayServer) deleteOrder(c *gin.Context) {
 	c.String(http.StatusNotImplemented, "not implemented yet")
 }
