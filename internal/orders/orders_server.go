@@ -41,7 +41,13 @@ func Start() {
 /// API METHODS (gRPC)
 
 func (s *OrdersServiceServer) Create(ctx context.Context, in *pb.CreateOrderRequest) (*pb.CreateOrderResponse, error) {
-	log.Printf("Recieved: %v", in.GetCoffees())
-	// Adding recieved data to DataBase, generating id
-	return &pb.CreateOrderResponse{Order: &pb.Order{Id: 1, Total: 1642}}, nil
+	log.Printf("Recieved: %v", in)
+	// Adding recieved data to DataBase
+	return &pb.CreateOrderResponse{Order: &pb.Order{Id: 111}}, nil
+}
+
+func (s *OrdersServiceServer) Get(ctx context.Context, in *pb.GetOrderRequest) (*pb.GetOrderResponse, error) {
+	log.Printf("Recieved: %v", in)
+	// Recieve data from DataBase
+	return &pb.GetOrderResponse{Orders: []*pb.Order{{Id: 222}}}, nil
 }
