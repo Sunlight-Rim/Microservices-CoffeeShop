@@ -2,9 +2,8 @@ package gw
 
 import (
 	orders_pb "coffeeshop/internal/orders/pb"
+	users_pb "coffeeshop/internal/users/pb"
 	"strconv"
-
-	// users_pb "coffeeshop/internal/users/pb"
 
 	"log"
 	"net/http"
@@ -26,6 +25,7 @@ const ( // TODO: move to config
 type GatewayServer struct {
 	server       *http.Server
 	clientOrders orders_pb.OrdersServiceClient
+	clientUsers  users_pb.UsersServiceClient
 }
 
 func New() GatewayServer {
@@ -34,7 +34,8 @@ func New() GatewayServer {
 	if err != nil {
 		log.Fatalf("Didn't connect: %v", err)
 	}
-	client := orders_pb.NewOrdersServiceClient(conn)
+	clientOrders := orders_pb.NewOrdersServiceClient(conn)
+	clientUsers := users_pb.NewUsersServiceClient(conn)
 	// REST router
 	router := gin.Default()
 	g := GatewayServer{
@@ -42,7 +43,8 @@ func New() GatewayServer {
 			Addr:    gwAddress,
 			Handler: router,
 		},
-		clientOrders: client,
+		clientOrders: clientOrders,
+		clientUsers:  clientUsers,
 	}
 	// Orders routing
 	routerOrders := router.Group("/order")
@@ -53,12 +55,16 @@ func New() GatewayServer {
 		routerOrders.PUT(":id", g.updateOrder)
 		routerOrders.DELETE(":id", g.deleteOrder)
 	}
+	// Users routing
+	// routerUsers := router.Group("/user")
 	return g
 }
 
 func (g GatewayServer) Start() error {
 	return g.server.ListenAndServe()
 }
+
+// TODO: c.String() change on c.Data()
 
 /// MIDDLEWARE
 
@@ -96,10 +102,9 @@ func (g GatewayServer) createOrder(c *gin.Context) {
 
 func (g GatewayServer) getOrder(c *gin.Context) {
 	req, _ := c.MustGet("req").(*orders_pb.GetOrderRequest)
-	println(c.Param("id"))
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		c.String(http.StatusInternalServerError, "Error in order request parameter")
+		c.String(http.StatusInternalServerError, "Error in url request parameter")
 	}
 	req.Ids = []int64{id}
 	// Get order using Orders service
