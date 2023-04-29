@@ -16,8 +16,9 @@ import (
 )
 
 const ( // TODO: move to config
-	grpcAddress = "localhost:50051"
-	gwAddress   = "localhost:8080"
+	ordersPort = "50051"
+	usersPort  = "50052"
+	restPort   = "8080"
 )
 
 /// SERVER DEFINITION
@@ -29,18 +30,24 @@ type GatewayServer struct {
 }
 
 func New() GatewayServer {
+	log.Print("API gateway (REST->gRPC) server listening at http://localhost:" + restPort)
 	// Connect to gRPC server
-	conn, err := grpc.Dial(grpcAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	ordersConn, err := grpc.Dial("localhost:"+ordersPort, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("Didn't connect: %v", err)
 	}
-	clientOrders := orders_pb.NewOrdersServiceClient(conn)
-	clientUsers := users_pb.NewUsersServiceClient(conn)
+	clientOrders := orders_pb.NewOrdersServiceClient(ordersConn)
+	usersConn, err := grpc.Dial("localhost:"+usersPort, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("Didn't connect: %v", err)
+	}
+	clientUsers := users_pb.NewUsersServiceClient(usersConn)
+
 	// REST router
 	router := gin.Default()
 	g := GatewayServer{
 		server: &http.Server{
-			Addr:    gwAddress,
+			Addr:    "localhost:" + restPort,
 			Handler: router,
 		},
 		clientOrders: clientOrders,
@@ -51,12 +58,20 @@ func New() GatewayServer {
 	{
 		routerOrders.POST("", marshalMiddleware(&orders_pb.CreateOrderRequest{}), g.createOrder)
 		routerOrders.GET(":id", marshalMiddleware(&orders_pb.GetOrderRequest{}), g.getOrder)
-		routerOrders.GET("", g.listOrder)
-		routerOrders.PUT(":id", g.updateOrder)
-		routerOrders.DELETE(":id", g.deleteOrder)
+		// routerOrders.GET("", g.listOrders)
+		// routerOrders.PUT(":id", g.updateOrder)
+		// routerOrders.DELETE(":id", g.deleteOrder)
 	}
 	// Users routing
-	// routerUsers := router.Group("/user")
+	routerUsers := router.Group("/user")
+	{
+		routerUsers.POST("/signup", marshalMiddleware(&users_pb.CreateUserRequest{}), g.createUser)
+		routerUsers.POST("/login", marshalMiddleware(&users_pb.LoginUserRequest{}), g.loginUser)
+		// routerUsers.GET(":id", marshalMiddleware(&users_pb.GetUserRequest{}), g.getUser)
+		// routerUsers.GET("", g.listUsers)
+		// routerUsers.PUT(":id", g.updateUser)
+		// routerUsers.DELETE(":id", g.deleteUser)
+	}
 	return g
 }
 
@@ -71,9 +86,10 @@ func (g GatewayServer) Start() error {
 func marshalMiddleware(req proto.Message) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Request unmarshal
+		log.Printf("%v", c.Request.Body)
 		err := jsonpb.Unmarshal(c.Request.Body, req)
 		if err != nil {
-			c.String(http.StatusInternalServerError, "Error in your order request")
+			c.String(http.StatusInternalServerError, "Error in your request")
 		}
 		c.Set("req", req)
 		// Perform requested method
@@ -83,17 +99,40 @@ func marshalMiddleware(req proto.Message) gin.HandlerFunc {
 		m := &jsonpb.Marshaler{}
 		if err := m.Marshal(c.Writer, resp); err != nil {
 			log.Print(err)
-			c.String(http.StatusInternalServerError, "Error sending order response")
+			c.String(http.StatusInternalServerError, "Error sending response")
 		}
 	}
 }
 
 /// API METHODS (REST)
 
+func (g GatewayServer) createUser(c *gin.Context) {
+	req, _ := c.MustGet("req").(*users_pb.CreateUserRequest)
+	// Create user using Users service
+	resp, err := g.clientUsers.Create(c.Request.Context(), req)
+
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Error creating user")
+	}
+	c.Set("resp", resp)
+}
+
+func (g GatewayServer) loginUser(c *gin.Context) {
+	req, _ := c.MustGet("req").(*users_pb.CreateUserRequest)
+	// Create user using Users service
+	resp, err := g.clientUsers.Create(c.Request.Context(), req)
+
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Error creating user")
+	}
+	c.Set("resp", resp)
+}
+
 func (g GatewayServer) createOrder(c *gin.Context) {
 	req, _ := c.MustGet("req").(*orders_pb.CreateOrderRequest)
 	// Create order using Orders service
 	resp, err := g.clientOrders.Create(c.Request.Context(), req)
+
 	if err != nil {
 		c.String(http.StatusInternalServerError, "Error creating order")
 	}
@@ -109,13 +148,14 @@ func (g GatewayServer) getOrder(c *gin.Context) {
 	req.Ids = []int64{id}
 	// Get order using Orders service
 	resp, err := g.clientOrders.Get(c.Request.Context(), req)
+
 	if err != nil {
 		c.String(http.StatusInternalServerError, "Error creating order")
 	}
 	c.Set("resp", resp)
 }
 
-func (g GatewayServer) listOrder(c *gin.Context) {
+func (g GatewayServer) listOrders(c *gin.Context) {
 	c.String(http.StatusNotImplemented, "not implemented yetx")
 }
 

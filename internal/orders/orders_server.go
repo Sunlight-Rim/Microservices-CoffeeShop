@@ -25,12 +25,11 @@ func Start() {
 	orderService := OrdersServiceServer{}
 	pb.RegisterOrdersServiceServer(grpcServer, &orderService)
 
-	lis, err := net.Listen("tcp", ":"+grpcPort)
+	lis, err := net.Listen("tcp", "localhost:"+grpcPort)
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 	log.Printf("Orders server listening at %v", lis.Addr())
-
 	go func() {
 		if err := grpcServer.Serve(lis); err != nil {
 			log.Fatalf("Failed to start gRPC server: %v", err)
@@ -41,7 +40,7 @@ func Start() {
 /// API METHODS (gRPC)
 
 func (s *OrdersServiceServer) Create(ctx context.Context, in *pb.CreateOrderRequest) (*pb.CreateOrderResponse, error) {
-	log.Printf("Recieved: %v", in)
+	log.Printf("Recieved: %v", in.GetCoffees())
 	// Adding recieved data to DataBase
 	return &pb.CreateOrderResponse{Order: &pb.Order{Id: 111}}, nil
 }

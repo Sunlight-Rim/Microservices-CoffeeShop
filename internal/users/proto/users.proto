@@ -9,35 +9,49 @@ option go_package = ".;users_pb";
 
 service UsersService {
     rpc Create (CreateUserRequest) returns (CreateUserResponse);
+    rpc Login (LoginUserRequest) returns (LoginUserResponse);
     rpc Get (GetUserRequest) returns (GetUserResponse); // one or more
     rpc Update (UpdateUserRequest) returns (UpdateUserResponse);
     rpc Delete (DeleteUserRequest) returns (DeleteUserResponse);
 }
 
 message User {
-    string username = 1;
-    string address = 2;
-    google.protobuf.Timestamp date = 3;
-    repeated int64 order_ids = 4;
-    // also have token in database
+    int64 id = 1;
+    string username = 2;
+    string address = 3;
+    google.protobuf.Timestamp regdate = 4;
+    repeated int64 order_ids = 5;
+    // also have password and token in database
 }
 
 // Create
 
 message CreateUserRequest {
     string username = 1;
-    string pass = 2;
+    string password = 2;
     string address = 3;
 }
 
 message CreateUserResponse {
-    string token = 1;
+    User user = 1;
+}
+
+// Login
+
+message LoginUserRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message LoginUserResponse {
+    int64 id = 1;
+    string token = 2;
 }
 
 // Get
 
 message GetUserRequest {
-    repeated int64 usernames = 1;
+    repeated int32 usernames = 1;
 }
 
 message GetUserResponse {

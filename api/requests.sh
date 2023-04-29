@@ -1,23 +1,38 @@
 # For vscode you can use https://marketplace.visualstudio.com/items?itemName=humao.rest-client
 
-### GET all Orders
-curl http://localhost:8080/orders
+### CREATE new User account
+curl -X POST http://localhost:8080/user/signup \
+    -H 'Accept: application/json' \
+    -d '{
+            "username": "test",
+            "password": "test",
+            "address":  "test"
+        }'
 
-### GET one Order
-curl http://localhost:8080/orders/1
+### LOGIN into your account
+curl -X POST http://localhost:8080/user/login \
+    -H 'Accept: application/json' \
+    -d '{
+          "username": "test",
+          "password": "test"
+      }'
+
+### GET all your Orders
+curl http://localhost:8080/order -H 'token: testToken'
+
+### GET one your Order
+curl http://localhost:8080/order/1 -H 'token: testToken'
 
 ### POST new Order
-curl http://localhost:8080/orders \
-    --include \
-    --header "Content-Type: application/json" \
-    --request "POST" \
-    --data '{"Type":"Espresso", "Sugar":10}'
+curl -X POST http://localhost:8080/order \
+    -H "Content-Type: application/json" \
+    -d '{"Type":"Espresso", "Sugar":10}'
 
 ### PATCH updated Order
-curl -X "PATCH" http://localhost:8080/orders/1 \
+curl -X "PATCH" http://localhost:8080/order/1 \
     --include \
     --header "Content-Type: application/json" \
     --data '{"Type":"Mocha"}'
 
 ### DELETE one Order
-curl -X "DELETE" http://localhost:8080/orders/1
+curl -X "DELETE" http://localhost:8080/order/1

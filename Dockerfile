@@ -3,11 +3,13 @@ FROM golang:latest
 
 WORKDIR /gorestapi
 
-COPY . ./
+COPY . .
 
-RUN go build -o bin cmd/main.go
+RUN go build -o shop cmd/main.go
 
 ## Deploy
-ENTRYPOINT ["./bin"]
-
 EXPOSE 8080
+
+RUN chmod a+x shop
+
+CMD ["./shop"]
