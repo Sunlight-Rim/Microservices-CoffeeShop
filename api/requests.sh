@@ -1,7 +1,7 @@
 # For vscode you can use https://marketplace.visualstudio.com/items?itemName=humao.rest-client
 
 ### CREATE new User account
-curl -X POST http://localhost:8080/user/signup \
+curl -sX POST http://localhost:8080/user/signup \
     -H 'Accept: application/json' \
     -d '{
             "username": "test",
@@ -10,7 +10,7 @@ curl -X POST http://localhost:8080/user/signup \
         }'
 
 ### LOGIN into your account
-curl -X POST http://localhost:8080/user/login \
+curl -sX POST http://localhost:8080/user/login \
     -H 'Accept: application/json' \
     -d '{
           "username": "test",
@@ -22,6 +22,7 @@ curl http://localhost:8080/order -H 'token: testToken'
 
 ### GET one your Order
 curl http://localhost:8080/order/1 -H 'token: testToken'
+
 
 ### POST new Order
 curl -X POST http://localhost:8080/order \

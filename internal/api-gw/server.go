@@ -79,27 +79,27 @@ func (g GatewayServer) Start() error {
 	return g.server.ListenAndServe()
 }
 
-// TODO: c.String() change on c.Data()
-
 /// MIDDLEWARE
 
 func marshalMiddleware(req proto.Message) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Request unmarshal
-		log.Printf("%v", c.Request.Body)
+		// Unmarshal request
 		err := jsonpb.Unmarshal(c.Request.Body, req)
 		if err != nil {
-			c.String(http.StatusInternalServerError, "Error in your request")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error in your request"})
 		}
 		c.Set("req", req)
 		// Perform requested method
 		c.Next()
 		// Send response
-		resp, _ := c.MustGet("resp").(proto.Message)
+		resp, ok := c.Get("resp")
+		if !ok {
+			return
+		}
 		m := &jsonpb.Marshaler{}
-		if err := m.Marshal(c.Writer, resp); err != nil {
+		if err := m.Marshal(c.Writer, resp.(proto.Message)); err != nil {
 			log.Print(err)
-			c.String(http.StatusInternalServerError, "Error sending response")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error sending response"})
 		}
 	}
 }
@@ -107,23 +107,19 @@ func marshalMiddleware(req proto.Message) gin.HandlerFunc {
 /// API METHODS (REST)
 
 func (g GatewayServer) createUser(c *gin.Context) {
-	req, _ := c.MustGet("req").(*users_pb.CreateUserRequest)
-	// Create user using Users service
-	resp, err := g.clientUsers.Create(c.Request.Context(), req)
-
+	resp, err := g.clientUsers.Create(c.Request.Context(), c.MustGet("req").(*users_pb.CreateUserRequest))
 	if err != nil {
-		c.String(http.StatusInternalServerError, "Error creating user")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()[33:]})
+		return
 	}
 	c.Set("resp", resp)
 }
 
 func (g GatewayServer) loginUser(c *gin.Context) {
-	req, _ := c.MustGet("req").(*users_pb.CreateUserRequest)
-	// Create user using Users service
-	resp, err := g.clientUsers.Create(c.Request.Context(), req)
-
+	resp, err := g.clientUsers.Login(c.Request.Context(), c.MustGet("req").(*users_pb.LoginUserRequest))
 	if err != nil {
-		c.String(http.StatusInternalServerError, "Error creating user")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()[33:]})
+		return
 	}
 	c.Set("resp", resp)
 }
@@ -140,11 +136,11 @@ func (g GatewayServer) createOrder(c *gin.Context) {
 }
 
 func (g GatewayServer) getOrder(c *gin.Context) {
-	req, _ := c.MustGet("req").(*orders_pb.GetOrderRequest)
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.String(http.StatusInternalServerError, "Error in url request parameter")
 	}
+	req, _ := c.MustGet("req").(*orders_pb.GetOrderRequest)
 	req.Ids = []int64{id}
 	// Get order using Orders service
 	resp, err := g.clientOrders.Get(c.Request.Context(), req)
