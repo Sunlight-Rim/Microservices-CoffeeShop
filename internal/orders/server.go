@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-const (
+const ( // TODO: move to config
 	grpcPort = "50051"
 )
 

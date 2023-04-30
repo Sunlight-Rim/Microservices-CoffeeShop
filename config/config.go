@@ -1,6 +1,7 @@
 package config
 
 import (
+	"log"
 	"os"
 
 	"gopkg.in/yaml.v3"
@@ -9,7 +10,8 @@ import (
 ///	CONFIG
 
 type Service struct {
-	URL string `yaml:"url"`
+	URL  string `yaml:"url"`
+	Port int16  `yaml:"port"`
 }
 
 type Config struct {
@@ -21,15 +23,10 @@ type Config struct {
 func New() (cfg *Config) {
 	f, err := os.ReadFile("config/config.yaml")
 	if err != nil {
-		panic(err)
+		log.Fatalf("Error in open config file: %v", err)
 	}
 	if err := yaml.Unmarshal(f, &cfg); err != nil {
-		panic(err)
+		log.Fatalf("Error in marshal config file: %v", err)
 	}
 	return
-}
-
-func GetSocket() string {
-	cfg := New()
-	return cfg.Host + ":" + cfg.Port
 }

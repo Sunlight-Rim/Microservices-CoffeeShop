@@ -51,7 +51,8 @@ message LoginUserResponse {
 // Get
 
 message GetUserRequest {
-    repeated int32 usernames = 1;
+    string token = 1;
+    repeated int64 ids = 2;
 }
 
 message GetUserResponse {

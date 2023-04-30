@@ -3,6 +3,8 @@ package users
 import (
 	pb "coffeeshop/internal/users/pb"
 	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	"context"
@@ -12,13 +14,14 @@ import (
 	"crypto/md5"
 	"database/sql"
 	"encoding/hex"
+	"encoding/json"
 
 	_ "github.com/mattn/go-sqlite3"
 	"google.golang.org/grpc"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
-const (
+const ( // TODO: move to config
 	grpcPort = "50052"
 )
 
@@ -36,11 +39,9 @@ func Start() {
 	if userService.db, err = sql.Open("sqlite3", "internal/users/users.db"); err != nil {
 		log.Fatalf("%v", err)
 	}
-
 	// Start gRPC server
 	grpcServer := grpc.NewServer()
 	pb.RegisterUsersServiceServer(grpcServer, &userService)
-
 	lis, err := net.Listen("tcp", "localhost:"+grpcPort)
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
@@ -63,12 +64,12 @@ func (s *UsersServiceServer) Create(ctx context.Context, in *pb.CreateUserReques
 	if checkName != 0 {
 		return nil, errors.New("the username is already taken")
 	}
-	// Fill the new row
+	// Fill a new row
 	t := time.Now()
-	res, err := s.db.Exec("insert into USERS (Username, Password, Address, RegDate) values ($1, $2, $3, $4)",
+	res, err := s.db.Exec("insert into USERS (Username, Password, Address, RegDate, OrderIds, Token) values ($1, $2, $3, $4, '', '')",
 		in.GetUsername(), in.GetPassword(), in.GetAddress(), t.Format(time.RFC3339))
 	if err != nil {
-		log.Printf("Cannot request to DB: %v", err)
+		log.Printf("DB request error: %v", err)
 		return nil, errors.New("there is some problem with DB")
 	}
 	id, _ := res.LastInsertId()
@@ -84,19 +85,55 @@ func (s *UsersServiceServer) Create(ctx context.Context, in *pb.CreateUserReques
 func (s *UsersServiceServer) Login(ctx context.Context, in *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
 	// Check for username and password is correct
 	var id int64
-	s.db.QueryRow("select id from USERS where Username == $1 and Password == $2",
-		in.GetUsername(), in.GetPassword()).Scan(&id)
-	if id == 0 {
+	if err := s.db.QueryRow("select id from USERS where Username == $1 and Password == $2",
+		in.GetUsername(), in.GetPassword()).Scan(&id); err != nil || id == 0 {
 		return nil, errors.New("username or password is incorrect")
 	}
 	// Generate token
 	t := time.Now()
 	hash := md5.Sum([]byte(in.GetUsername() + in.GetPassword() + t.Format(time.RFC3339)))
 	token := hex.EncodeToString(hash[:])
-	_, err := s.db.Exec("update USERS set Token = $1 where Id = $2", token, id)
-	if err != nil {
-		log.Printf("Cannot request to DB: %v", err)
+	if _, err := s.db.Exec("update USERS set Token = $1 where Id = $2", token, id); err != nil {
+		log.Printf("DB request error: %v", err)
 		return nil, errors.New("there is some problem with DB")
 	}
 	return &pb.LoginUserResponse{Id: id, Token: token}, nil
+}
+
+func (s *UsersServiceServer) Get(ctx context.Context, in *pb.GetUserRequest) (*pb.GetUserResponse, error) {
+	var (
+		users = []*pb.User{}
+		t time.Time
+		orders string
+	)
+	// Find user by token if not requested Ids
+	if in.GetIds() == nil {
+		user := pb.User{}
+		if err := s.db.QueryRow("select Id, Username, Address, RegDate, OrderIds from USERS where Token == $1",
+			in.GetToken()).Scan(&user.Id, &user.Username, &user.Address, &t, &orders); err != nil || user.Id == 0 {
+			log.Printf("%v", err)
+			return nil, errors.New("token is incorrect")
+		}
+		user.Regdate = timestamppb.New(t)
+		json.Unmarshal([]byte(orders), &user.OrderIds)
+		users = append(users, &user)
+	// Find users by requested Ids
+	} else {
+		rows, err := s.db.Query("select Id, Username, Address, RegDate, OrderIds from USERS where Id in ("+
+			strings.Trim(strings.Join(strings.Fields(fmt.Sprint(in.GetIds())), ","), "[]")+")")
+		if err != nil {
+			log.Printf("DB request error: %v", err)
+			return nil, errors.New("there is some problem with DB")
+		}
+		defer rows.Close()
+		for i := 0; rows.Next(); i++ {
+			user := pb.User{}
+			rows.Scan(&user.Id, &user.Username, &user.Address, &t, &orders)
+			json.Unmarshal([]byte(orders), &user.OrderIds)
+			user.Regdate = timestamppb.New(t)
+			users = append(users, &user)
+		}
+	}
+	// request to DB to find users by Ids
+	return &pb.GetUserResponse{Users: users}, nil
 }

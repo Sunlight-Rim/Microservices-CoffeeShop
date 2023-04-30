@@ -1,7 +1,7 @@
 package main
 
 import (
-	gw "coffeeshop/internal/api-gw"
+	"coffeeshop/internal/gw"
 	"coffeeshop/internal/orders"
 	"coffeeshop/internal/users"
 )
@@ -11,7 +11,5 @@ import (
 func main() {
 	orders.Start()
 	users.Start()
-
-	gwServer := gw.New()
-	gwServer.Start()
+	gw.Start()
 }

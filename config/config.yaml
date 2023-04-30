@@ -4,5 +4,7 @@ port: 8080
 services:
   users:
     url: "users/"
+    port: 50051
   orders:
     url: "orders/"
+    port: 50052

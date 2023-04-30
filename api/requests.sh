@@ -7,7 +7,7 @@ curl -sX POST http://localhost:8080/user/signup \
             "username": "test",
             "password": "test",
             "address":  "test"
-        }'
+    }'
 
 ### LOGIN into your account
 curl -sX POST http://localhost:8080/user/login \
@@ -15,7 +15,20 @@ curl -sX POST http://localhost:8080/user/login \
     -d '{
           "username": "test",
           "password": "test"
-      }'
+    }'
+
+### GET information of your account
+curl -X GET http://localhost:8080/user \
+    -H 'Accept: application/json' \
+    -H 'token:  cf003d0c48297bd52d5b5ce4a06f5a5c'
+
+### GET information of accounts with id 1 and 3
+curl -X GET http://localhost:8080/user \
+    -H 'Accept: application/json' \
+    -H 'token:  cf003d0c48297bd52d5b5ce4a06f5a5c' \
+    -d '{
+        "ids": [1, 3]
+    }'
 
 ### GET all your Orders
 curl http://localhost:8080/order -H 'token: testToken'

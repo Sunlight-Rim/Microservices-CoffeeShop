@@ -1,26 +1,28 @@
 # Coffee Shop App Docs
 
 - [Endpoints](#endpoints)
-- [Register and login](#register-and-login)
+- [Auth](#auth)
 - [Orders](#orders)
 - [Users](#users)
 
 ## Endpoints
-| URL          | Description                                   | Method   | Data                              |
-|--------------|-----------------------------------------------|----------|-----------------------------------|
-| /user/signup | Register user                                 | `POST`   | username<br> password<br> address |
-| /user/login  | Login user                                    | `POST`   | username<br> password             |
-| /user        | View all users data                           | `GET`    |                                   |
-| /user/1      | View data of user with id=1                   | `GET`    |                                   |
-| /user        | Change some info of your account              | `PATCH`  | username<br> password<br> address |
-| /user        | Delete your account                           | `DELETE` |                                   |
-| /order       | Create new order                              | `POST`   | type<br> sugar(int)               |
-| /order       | View all your orders                          | `GET`    |                                   |
-| /order/1     | View your certain order                       | `GET`    |                                   |
-| /order/1     | Update your order if it hasn't been delivered | `PATCH`  | type <br> sugar(int)              |
-| /order/1     | Delete your certain order                     | `DELETE` |                                   |
+| URL          | Description                                   | Method   | Data                                 |
+|--------------|-----------------------------------------------|----------|--------------------------------------|
+| /user/signup | Register user                                 | `POST`   | username<br> password<br> address    |
+| /user/login  | Login user                                    | `POST`   | username<br> password                |
+| /user        | View data of your account                     | `GET`    |                                      |
+| /user        | View data of users with id specified in Data  | `GET`    | ids                                  |
+| /user        | Change some info of your account              | `PATCH`  | username<br> password<br> address    |
+| /user        | Delete your account                           | `DELETE` |                                      |
+| /order       | Create new order                              | `POST`   | (token in header)<br> type<br> sugar |
+| /order       | View all your orders                          | `GET`    |                                      |
+| /order/1     | View your certain order                       | `GET`    |                                      |
+| /order/1     | Update your order if it hasn't been delivered | `PATCH`  | (token in header)<br> type<br> sugar |
+| /order/1     | Delete your certain order                     | `DELETE` |                                      |
 
-## Register and login
+## Auth
+
+### Register
 
 Firslty, you need to register a new user via sending POST request
 to /user/signup with `username`, `address` and `password` in data:
@@ -28,10 +30,10 @@ to /user/signup with `username`, `address` and `password` in data:
 curl -X POST http://localhost:8080/user/signup \
     -H 'Accept: application/json' \
     -d '{
-          "username": "ScottPilgrim",
-          "password": "ramonalove",
-          "address":  "65 Alberta Ave, Regal Heights, Toronto"
-      }'
+        "username": "ScottPilgrim",
+        "password": "ramonalove",
+        "address":  "65 Alberta Ave, Regal Heights, Toronto"
+    }'
 ```
 Response:
 ```json
@@ -46,15 +48,17 @@ Response:
 }
 ```
 
+### Login
+
 Then you need to login in just created account by sending POST
 to /user/login with `username` and `password`:
 ```shell
 curl -X POST http://localhost:8080/user/login \
     -H 'Accept: application/json' \
     -d '{
-          "username": "ScottPilgrim",
-          "password": "ramonalove"
-      }'
+        "username": "ScottPilgrim",
+        "password": "ramonalove"
+    }'
 ```
 Response:
 ```json
