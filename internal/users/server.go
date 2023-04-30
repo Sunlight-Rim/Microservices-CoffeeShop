@@ -33,12 +33,12 @@ type UsersServiceServer struct {
 }
 
 func Start() {
-	userService := UsersServiceServer{}
 	// Connect to DB
-	var err error
-	if userService.db, err = sql.Open("sqlite3", "internal/users/users.db"); err != nil {
+	db, err := sql.Open("sqlite3", "internal/users/users.db")
+	if err != nil {
 		log.Fatalf("%v", err)
 	}
+	userService := UsersServiceServer{db: db}
 	// Start gRPC server
 	grpcServer := grpc.NewServer()
 	pb.RegisterUsersServiceServer(grpcServer, &userService)
@@ -59,9 +59,9 @@ func Start() {
 
 func (s *UsersServiceServer) Create(ctx context.Context, in *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
 	// Check if name is already exists
-	var checkName int
-	s.db.QueryRow("select Id from USERS where Username == $1", in.GetUsername()).Scan(&checkName)
-	if checkName != 0 {
+	var id int64
+	s.db.QueryRow("select Id from USERS where Username == $1", in.GetUsername()).Scan(&id)
+	if id != 0 {
 		return nil, errors.New("the username is already taken")
 	}
 	// Fill a new row
@@ -72,7 +72,7 @@ func (s *UsersServiceServer) Create(ctx context.Context, in *pb.CreateUserReques
 		log.Printf("DB request error: %v", err)
 		return nil, errors.New("there is some problem with DB")
 	}
-	id, _ := res.LastInsertId()
+	id, _ = res.LastInsertId()
 	return &pb.CreateUserResponse{User: &pb.User{
 		Id:       id,
 		Username: in.GetUsername(),
@@ -85,8 +85,8 @@ func (s *UsersServiceServer) Create(ctx context.Context, in *pb.CreateUserReques
 func (s *UsersServiceServer) Login(ctx context.Context, in *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
 	// Check for username and password is correct
 	var id int64
-	if err := s.db.QueryRow("select id from USERS where Username == $1 and Password == $2",
-		in.GetUsername(), in.GetPassword()).Scan(&id); err != nil || id == 0 {
+	if s.db.QueryRow("select Id from USERS where Username == $1 and Password == $2",
+		in.GetUsername(), in.GetPassword()).Scan(&id); id == 0 {
 		return nil, errors.New("username or password is incorrect")
 	}
 	// Generate token
@@ -102,25 +102,29 @@ func (s *UsersServiceServer) Login(ctx context.Context, in *pb.LoginUserRequest)
 
 func (s *UsersServiceServer) Get(ctx context.Context, in *pb.GetUserRequest) (*pb.GetUserResponse, error) {
 	var (
-		users = []*pb.User{}
-		t time.Time
+		users  = []*pb.User{}
+		t      time.Time
 		orders string
 	)
-	// Find user by token if not requested Ids
+	// Find user account by token if Ids not requested
 	if in.GetIds() == nil {
 		user := pb.User{}
-		if err := s.db.QueryRow("select Id, Username, Address, RegDate, OrderIds from USERS where Token == $1",
-			in.GetToken()).Scan(&user.Id, &user.Username, &user.Address, &t, &orders); err != nil || user.Id == 0 {
-			log.Printf("%v", err)
+		if s.db.QueryRow("select Id, Username, Address, RegDate, OrderIds from USERS where Token == $1",
+			in.GetToken()).Scan(&user.Id, &user.Username, &user.Address, &t, &orders); user.Id == 0 {
 			return nil, errors.New("token is incorrect")
 		}
 		user.Regdate = timestamppb.New(t)
 		json.Unmarshal([]byte(orders), &user.OrderIds)
 		users = append(users, &user)
-	// Find users by requested Ids
 	} else {
-		rows, err := s.db.Query("select Id, Username, Address, RegDate, OrderIds from USERS where Id in ("+
-			strings.Trim(strings.Join(strings.Fields(fmt.Sprint(in.GetIds())), ","), "[]")+")")
+		// Check token
+		var id int64
+		if s.db.QueryRow("select Id from USERS where Token == $1", in.GetToken()).Scan(&id); id == 0 {
+			return nil, errors.New("token is incorrect")
+		}
+		// Find users by requested Ids
+		rows, err := s.db.Query("select Id, Username, Address, RegDate, OrderIds from USERS where Id in (" +
+			strings.Trim(strings.Join(strings.Fields(fmt.Sprint(in.GetIds())), ","), "[]") + ")")
 		if err != nil {
 			log.Printf("DB request error: %v", err)
 			return nil, errors.New("there is some problem with DB")
@@ -134,6 +138,5 @@ func (s *UsersServiceServer) Get(ctx context.Context, in *pb.GetUserRequest) (*p
 			users = append(users, &user)
 		}
 	}
-	// request to DB to find users by Ids
 	return &pb.GetUserResponse{Users: users}, nil
 }

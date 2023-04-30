@@ -10,8 +10,8 @@
 |--------------|-----------------------------------------------|----------|--------------------------------------|
 | /user/signup | Register user                                 | `POST`   | username<br> password<br> address    |
 | /user/login  | Login user                                    | `POST`   | username<br> password                |
-| /user        | View data of your account                     | `GET`    |                                      |
-| /user        | View data of users with id specified in Data  | `GET`    | ids                                  |
+| /user        | View info of your account                     | `GET`    |                                      |
+| /user        | View info of users with id specified in Data  | `GET`    | ids                                  |
 | /user        | Change some info of your account              | `PATCH`  | username<br> password<br> address    |
 | /user        | Delete your account                           | `DELETE` |                                      |
 | /order       | Create new order                              | `POST`   | (token in header)<br> type<br> sugar |

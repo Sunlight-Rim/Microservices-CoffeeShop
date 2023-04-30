@@ -82,21 +82,16 @@ func marshalMW(req proto.Message) gin.HandlerFunc {
 		req.Reset()
 		// Unmarshal request
 		if err := u.Unmarshal(c.Request.Body, req); err != nil && err.Error() != "EOF" {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error in your request"})
-			c.Abort()
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Error in your request"})
 			return
 		}
 		c.Set("req", req)
 		// Perform requested method
 		c.Next()
 		// Send response
-		resp, ok := c.Get("resp")
-		if !ok {
-			return
-		}
-		if err := m.Marshal(c.Writer, resp.(proto.Message)); err != nil {
+		if err := m.Marshal(c.Writer, c.MustGet("resp").(proto.Message)); err != nil {
 			log.Print(err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error sending response"})
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Error sending response"})
 		}
 	}
 }
@@ -106,7 +101,7 @@ func marshalMW(req proto.Message) gin.HandlerFunc {
 func (g GatewayServer) createUser(c *gin.Context) {
 	resp, err := g.usersClient.Create(c.Request.Context(), c.MustGet("req").(*users_pb.CreateUserRequest))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.Set("resp", resp)
@@ -115,7 +110,7 @@ func (g GatewayServer) createUser(c *gin.Context) {
 func (g GatewayServer) loginUser(c *gin.Context) {
 	resp, err := g.usersClient.Login(c.Request.Context(), c.MustGet("req").(*users_pb.LoginUserRequest))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.Set("resp", resp)
@@ -123,14 +118,13 @@ func (g GatewayServer) loginUser(c *gin.Context) {
 
 func (g GatewayServer) getUser(c *gin.Context) {
 	req := c.MustGet("req").(*users_pb.GetUserRequest)
-	req.Token = c.Request.Header.Get("token")
-	if req.Token == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "you are not authorized"})
+	if req.Token = c.Request.Header.Get("token"); req.Token == "" {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "you are not authorized"})
 		return
 	}
 	resp, err := g.usersClient.Get(c.Request.Context(), req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.Set("resp", resp)
@@ -164,7 +158,7 @@ func (g GatewayServer) getOrder(c *gin.Context) {
 }
 
 func (g GatewayServer) listOrders(c *gin.Context) {
-	c.String(http.StatusNotImplemented, "not implemented yetx")
+	c.String(http.StatusNotImplemented, "not implemented yet")
 }
 
 func (g GatewayServer) updateOrder(c *gin.Context) {
