@@ -11,7 +11,7 @@
 | /user/signup | Register user                                 | `POST`   | username<br> password<br> address    |
 | /user/login  | Login user                                    | `POST`   | username<br> password                |
 | /user        | View info of your account                     | `GET`    |                                      |
-| /user        | View info of users with id specified in Data  | `GET`    | ids                                  |
+| /user        | View info of users with ID specified in Data  | `GET`    | ids                                  |
 | /user        | Change some info of your account              | `PATCH`  | username<br> password<br> address    |
 | /user        | Delete your account                           | `DELETE` |                                      |
 | /order       | Create new order                              | `POST`   | (token in header)<br> type<br> sugar |
@@ -37,14 +37,11 @@ curl -X POST http://localhost:8080/user/signup \
 ```
 Response:
 ```json
-{
-  "user": {
-    "id":        1,
-    "username":  "ScottPilgrim",
-    "address":   "65 Alberta Ave, Regal Heights, Toronto",
-    "regdate":   "12.06.2023",
-    "order_ids": []
-  }
+"user": {
+  "id":        1,
+  "username":  "ScottPilgrim",
+  "address":   "65 Alberta Ave, Regal Heights, Toronto",
+  "regdate":   "2023-04-30T18:47:35Z"
 }
 ```
 
@@ -62,10 +59,8 @@ curl -X POST http://localhost:8080/user/login \
 ```
 Response:
 ```json
-{
-  "id":    1,
-  "token": "NyBldmlsIGV4ZXM="
-}
+"id":    1,
+"token": "NyBldmlsIGV4ZXM="
 ```
 
 Now, you can use recieved token in your orders and users requests.
@@ -77,40 +72,93 @@ The token is regenerated after you change your password.
 
 You can order one coffee:
 ```
-curl http://localhost:8080/order -X \
-    --include \
-    --header 'token: NyBldmlsIGV4ZXM=' \
-    --request "POST" \
-    --data '{
-        "coffees":[{"type":"Espresso", "sugar":10}] \
-    }'
+
 ```
 Response:
 
 ```
-{
-  "order": {
-    ...
-  }
-}
+
 ```
 
 ## Get one Order
+
 For getting one, just send
 ```
-curl http://localhost:8080/order/25 -sX \
-    --include \
-    --header "Content-Type: application/json" \
-    --request "GET" \           
-    --data '{"token":"T3VyIERlbW9jcmFjeSBoYXMgYmVlbiBoYWNrZWQ="}'
+
 ```
 Response:
 ```
-{
-  "order": {
-    ...
-  }
-}
+
 ```
 
 ## Users
+
+### GET
+
+You can get information about your account:
+```shell
+curl -X GET http://localhost:8080/user \
+    -H 'Accept: application/json' \
+    -H 'token: NyBldmlsIGV4ZXM='
+```
+Response:
+```json
+"user": {
+  "id":        1,
+  "username":  "ScottPilgrim",
+  "address":   "65 Alberta Ave, Regal Heights, Toronto",
+  "regdate":   "2023-04-30T18:47:35Z"
+}
+```
+
+Also you can get information about other accounts by specifying their IDs:
+```shell
+curl -X GET http://localhost:8080/user \
+    -H 'Accept: application/json' \
+    -H 'token:  NyBldmlsIGV4ZXM=' \
+    -d '{
+        "ids": [1, 2]
+    }'
+```
+Response:
+```json
+"users": [
+  {
+    "id": "1",
+    "username": "ScottPilgrim",
+    "address": "65 Alberta Ave, Regal Heights, Toronto",
+    "regdate": "2023-04-30T18:47:35Z"
+  },
+  {
+    "id": "2",
+    "username": "WallaceWells",
+    "address": "66 Alberta Ave, Regal Heights, Toronto",
+    "regdate": "2023-05-01T15:13:20Z"
+  }
+]
+```
+
+### UPDATE
+
+You can update some information of your account:
+```shell
+curl -X PATCH http://localhost:8080/user \
+    -H 'Accept: application/json' \
+    -H 'token:  NyBldmlsIGV4ZXM=' \
+    -d '{
+        "user": {
+            "username": "Scott"
+        }
+    }'
+```
+Response:
+```json
+"user": [
+  {
+    "id": "1",
+    "username": "Scott",
+    "address": "65 Alberta Ave, Regal Heights, Toronto",
+    "regdate": "2023-04-30T18:47:35Z"
+  }
+]
+```

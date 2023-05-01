@@ -3,8 +3,8 @@ port: 8080
 
 services:
   users:
-    url: "users/"
+    url: "/user"
     port: 50051
   orders:
-    url: "orders/"
+    url: "/order"
     port: 50052

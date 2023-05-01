@@ -60,8 +60,7 @@ func Start() {
 func (s *UsersServiceServer) Create(ctx context.Context, in *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
 	// Check if name is already exists
 	var id int64
-	s.db.QueryRow("select Id from USERS where Username == $1", in.GetUsername()).Scan(&id)
-	if id != 0 {
+	if s.db.QueryRow("select Id from USERS where Username == $1", in.GetUsername()).Scan(&id); id != 0 {
 		return nil, errors.New("the username is already taken")
 	}
 	// Fill a new row
@@ -78,7 +77,7 @@ func (s *UsersServiceServer) Create(ctx context.Context, in *pb.CreateUserReques
 		Username: in.GetUsername(),
 		Address:  in.GetAddress(),
 		Regdate:  timestamppb.New(t),
-		OrderIds: []int64{},
+		OrderIds: nil,
 	}}, nil
 }
 
@@ -93,7 +92,7 @@ func (s *UsersServiceServer) Login(ctx context.Context, in *pb.LoginUserRequest)
 	t := time.Now()
 	hash := md5.Sum([]byte(in.GetUsername() + in.GetPassword() + t.Format(time.RFC3339)))
 	token := hex.EncodeToString(hash[:])
-	if _, err := s.db.Exec("update USERS set Token = $1 where Id = $2", token, id); err != nil {
+	if _, err := s.db.Exec("update USERS set Token = $1 where Id == $2", token, id); err != nil {
 		log.Printf("DB request error: %v", err)
 		return nil, errors.New("there is some problem with DB")
 	}
@@ -139,4 +138,31 @@ func (s *UsersServiceServer) Get(ctx context.Context, in *pb.GetUserRequest) (*p
 		}
 	}
 	return &pb.GetUserResponse{Users: users}, nil
+}
+
+func (s *UsersServiceServer) Update(ctx context.Context, in *pb.UpdateUserRequest) (*pb.UpdateUserResponse, error) {
+	var (
+		user   = &pb.User{}
+		t      time.Time
+		orders string
+	)
+	if s.db.QueryRow("select Id, Username, Address, RegDate, OrderIds from USERS where Token == $1",
+		in.GetToken()).Scan(&user.Id, &user.Username, &user.Address, &t, &orders); user.Username == "" {
+		return nil, errors.New("token is incorrect")
+	}
+	if username := in.GetUser().Username; username != "" {
+		user.Username = username
+	}
+	if address := in.GetUser().Address; address != "" {
+		user.Address = address
+	}
+	// Update info
+	if _, err := s.db.Exec("update USERS set Username = $1, Address = $2 where Token == $3",
+		user.Username, user.Address, in.GetToken()); err != nil {
+		log.Printf("DB request error: %v", err)
+		return nil, errors.New("there is some problem with DB")
+	}
+	json.Unmarshal([]byte(orders), &user.OrderIds)
+	user.Regdate = timestamppb.New(t)
+	return &pb.UpdateUserResponse{User: user}, nil
 }

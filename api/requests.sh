@@ -18,16 +18,26 @@ curl -sX POST http://localhost:8080/user/login \
     }'
 
 ### GET information of your account
-curl -X GET http://localhost:8080/user \
+curl -sX GET http://localhost:8080/user \
     -H 'Accept: application/json' \
-    -H 'token:  cf003d0c48297bd52d5b5ce4a06f5a5c'
+    -H 'token:  testToken'
 
 ### GET information of accounts with id 1 and 3
-curl -X GET http://localhost:8080/user \
+curl -sX GET http://localhost:8080/user \
     -H 'Accept: application/json' \
-    -H 'token:  cf003d0c48297bd52d5b5ce4a06f5a5c' \
+    -H 'token:  testToken' \
     -d '{
         "ids": [1, 3]
+    }'
+
+### UPDATE information of your account
+curl -sX PATCH http://localhost:8080/user \
+    -H 'Accept: application/json' \
+    -H 'token:  testToken' \
+    -d '{
+        "user": {
+            "username": "newName"
+        }
     }'
 
 ### GET all your Orders
