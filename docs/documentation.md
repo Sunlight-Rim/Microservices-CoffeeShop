@@ -25,7 +25,7 @@
 ### Register
 
 Firslty, you need to register a new user via sending POST request
-to /user/signup with `username`, `address` and `password` in data:
+to /user/signup with `username`, `password` and `address` in data:
 ```shell
 curl -X POST http://localhost:8080/user/signup \
     -H 'Accept: application/json' \
@@ -80,7 +80,7 @@ Response:
 
 ```
 
-## Get one Order
+### Get one Order
 
 For getting one, just send
 ```
@@ -150,6 +150,26 @@ curl -X PATCH http://localhost:8080/user \
             "username": "Scott"
         }
     }'
+```
+Response:
+```json
+"user": [
+  {
+    "id": "1",
+    "username": "Scott",
+    "address": "65 Alberta Ave, Regal Heights, Toronto",
+    "regdate": "2023-04-30T18:47:35Z"
+  }
+]
+```
+
+### DELETE
+
+To delete an account, you can use the DELETE method:
+```shell
+curl -X DELETE http://localhost:8080/user \
+    -H 'Accept: application/json' \
+    -H 'token:  NyBldmlsIGV4ZXM='
 ```
 Response:
 ```json

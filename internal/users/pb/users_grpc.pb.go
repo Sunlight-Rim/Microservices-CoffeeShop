@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -19,11 +20,15 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	UsersService_Create_FullMethodName = "/users.UsersService/Create"
-	UsersService_Login_FullMethodName  = "/users.UsersService/Login"
-	UsersService_Get_FullMethodName    = "/users.UsersService/Get"
-	UsersService_Update_FullMethodName = "/users.UsersService/Update"
-	UsersService_Delete_FullMethodName = "/users.UsersService/Delete"
+	UsersService_Create_FullMethodName          = "/users.UsersService/Create"
+	UsersService_Login_FullMethodName           = "/users.UsersService/Login"
+	UsersService_Get_FullMethodName             = "/users.UsersService/Get"
+	UsersService_Update_FullMethodName          = "/users.UsersService/Update"
+	UsersService_Delete_FullMethodName          = "/users.UsersService/Delete"
+	UsersService_AuthUser_FullMethodName        = "/users.UsersService/AuthUser"
+	UsersService_GetUserOrders_FullMethodName   = "/users.UsersService/GetUserOrders"
+	UsersService_CreateUserOrder_FullMethodName = "/users.UsersService/CreateUserOrder"
+	UsersService_DeleteUserOrder_FullMethodName = "/users.UsersService/DeleteUserOrder"
 )
 
 // UsersServiceClient is the client API for UsersService service.
@@ -35,6 +40,11 @@ type UsersServiceClient interface {
 	Get(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error)
 	Update(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*UpdateUserResponse, error)
 	Delete(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*DeleteUserResponse, error)
+	// only for OrdersService interaction
+	AuthUser(ctx context.Context, in *AuthUserRequest, opts ...grpc.CallOption) (*AuthUserResponse, error)
+	GetUserOrders(ctx context.Context, in *GetUserOrdersRequest, opts ...grpc.CallOption) (*GetUserOrdersResponse, error)
+	CreateUserOrder(ctx context.Context, in *CreateUserOrderRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	DeleteUserOrder(ctx context.Context, in *DeleteUserOrderRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type usersServiceClient struct {
@@ -90,6 +100,42 @@ func (c *usersServiceClient) Delete(ctx context.Context, in *DeleteUserRequest, 
 	return out, nil
 }
 
+func (c *usersServiceClient) AuthUser(ctx context.Context, in *AuthUserRequest, opts ...grpc.CallOption) (*AuthUserResponse, error) {
+	out := new(AuthUserResponse)
+	err := c.cc.Invoke(ctx, UsersService_AuthUser_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *usersServiceClient) GetUserOrders(ctx context.Context, in *GetUserOrdersRequest, opts ...grpc.CallOption) (*GetUserOrdersResponse, error) {
+	out := new(GetUserOrdersResponse)
+	err := c.cc.Invoke(ctx, UsersService_GetUserOrders_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *usersServiceClient) CreateUserOrder(ctx context.Context, in *CreateUserOrderRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, UsersService_CreateUserOrder_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *usersServiceClient) DeleteUserOrder(ctx context.Context, in *DeleteUserOrderRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, UsersService_DeleteUserOrder_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UsersServiceServer is the server API for UsersService service.
 // All implementations must embed UnimplementedUsersServiceServer
 // for forward compatibility
@@ -99,6 +145,11 @@ type UsersServiceServer interface {
 	Get(context.Context, *GetUserRequest) (*GetUserResponse, error)
 	Update(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error)
 	Delete(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error)
+	// only for OrdersService interaction
+	AuthUser(context.Context, *AuthUserRequest) (*AuthUserResponse, error)
+	GetUserOrders(context.Context, *GetUserOrdersRequest) (*GetUserOrdersResponse, error)
+	CreateUserOrder(context.Context, *CreateUserOrderRequest) (*emptypb.Empty, error)
+	DeleteUserOrder(context.Context, *DeleteUserOrderRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedUsersServiceServer()
 }
 
@@ -120,6 +171,18 @@ func (UnimplementedUsersServiceServer) Update(context.Context, *UpdateUserReques
 }
 func (UnimplementedUsersServiceServer) Delete(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
+}
+func (UnimplementedUsersServiceServer) AuthUser(context.Context, *AuthUserRequest) (*AuthUserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AuthUser not implemented")
+}
+func (UnimplementedUsersServiceServer) GetUserOrders(context.Context, *GetUserOrdersRequest) (*GetUserOrdersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserOrders not implemented")
+}
+func (UnimplementedUsersServiceServer) CreateUserOrder(context.Context, *CreateUserOrderRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateUserOrder not implemented")
+}
+func (UnimplementedUsersServiceServer) DeleteUserOrder(context.Context, *DeleteUserOrderRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteUserOrder not implemented")
 }
 func (UnimplementedUsersServiceServer) mustEmbedUnimplementedUsersServiceServer() {}
 
@@ -224,6 +287,78 @@ func _UsersService_Delete_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UsersService_AuthUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UsersServiceServer).AuthUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UsersService_AuthUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UsersServiceServer).AuthUser(ctx, req.(*AuthUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UsersService_GetUserOrders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserOrdersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UsersServiceServer).GetUserOrders(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UsersService_GetUserOrders_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UsersServiceServer).GetUserOrders(ctx, req.(*GetUserOrdersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UsersService_CreateUserOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateUserOrderRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UsersServiceServer).CreateUserOrder(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UsersService_CreateUserOrder_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UsersServiceServer).CreateUserOrder(ctx, req.(*CreateUserOrderRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UsersService_DeleteUserOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteUserOrderRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UsersServiceServer).DeleteUserOrder(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UsersService_DeleteUserOrder_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UsersServiceServer).DeleteUserOrder(ctx, req.(*DeleteUserOrderRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UsersService_ServiceDesc is the grpc.ServiceDesc for UsersService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -250,6 +385,22 @@ var UsersService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Delete",
 			Handler:    _UsersService_Delete_Handler,
+		},
+		{
+			MethodName: "AuthUser",
+			Handler:    _UsersService_AuthUser_Handler,
+		},
+		{
+			MethodName: "GetUserOrders",
+			Handler:    _UsersService_GetUserOrders_Handler,
+		},
+		{
+			MethodName: "CreateUserOrder",
+			Handler:    _UsersService_CreateUserOrder_Handler,
+		},
+		{
+			MethodName: "DeleteUserOrder",
+			Handler:    _UsersService_DeleteUserOrder_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

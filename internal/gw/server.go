@@ -36,12 +36,10 @@ func Start() error {
 	if err != nil {
 		log.Fatalf("Didn't connect to gRPC: %v", err)
 	}
-	ordersClient := ordersPB.NewOrdersServiceClient(ordersConn)
 	usersConn, err := grpc.Dial("localhost:"+usersPort, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("Didn't connect to gRPC: %v", err)
 	}
-	usersClient := usersPB.NewUsersServiceClient(usersConn)
 	// REST router
 	router := gin.Default()
 	// gin.SetMode(gin.ReleaseMode)
@@ -50,14 +48,14 @@ func Start() error {
 			Addr:    "localhost:" + restPort,
 			Handler: router,
 		},
-		ordersClient: ordersClient,
-		usersClient:  usersClient,
+		ordersClient: ordersPB.NewOrdersServiceClient(ordersConn),
+		usersClient:  usersPB.NewUsersServiceClient(usersConn),
 	}
 	routerOrders := router.Group("/order")
 	{
-		routerOrders.POST("", marshalMW(&ordersPB.CreateOrderRequest{}), g.createOrder)
-		// routerOrders.GET(":id", marshalMW(&ordersPB.GetOrderRequest{}), g.getOrder)
-		// routerOrders.GET("", g.listOrders)
+		routerOrders.POST("", authToken, marshalMW(&ordersPB.CreateOrderRequest{}), g.createOrder)
+		routerOrders.GET(":id", authToken, marshalMW(&ordersPB.GetOrderRequest{}), g.getOrder)
+		routerOrders.GET("", authToken, marshalMW(&ordersPB.GetOrderRequest{}), g.listOrders)
 		// routerOrders.PUT(":id", g.updateOrder)
 		// routerOrders.DELETE(":id", g.deleteOrder)
 	}
@@ -67,7 +65,7 @@ func Start() error {
 		routerUsers.POST("/login", marshalMW(&usersPB.LoginUserRequest{}), g.loginUser)
 		routerUsers.GET("", authToken, marshalMW(&usersPB.GetUserRequest{}), g.getUser)
 		routerUsers.PATCH("", authToken, marshalMW(&usersPB.UpdateUserRequest{}), g.updateUser)
-		// routerUsers.DELETE(":id", g.deleteUser)
+		routerUsers.DELETE("", authToken, marshalMW(&usersPB.DeleteUserRequest{}), g.deleteUser)
 	}
 	// Start server
 	return g.restServer.ListenAndServe()
@@ -128,6 +126,11 @@ func (g GatewayServer) loginUser(c *gin.Context) {
 
 func (g GatewayServer) getUser(c *gin.Context) {
 	req := c.MustGet("req").(*usersPB.GetUserRequest)
+	// if req == nil {
+	// 	Get
+	// } else {
+	// 	List
+	// }
 	req.Token = c.MustGet("token").(string)
 	resp, err := g.usersClient.Get(c.Request.Context(), req)
 	c.Set("err", err)
@@ -142,35 +145,40 @@ func (g GatewayServer) updateUser(c *gin.Context) {
 	c.Set("resp", resp)
 }
 
-func (g GatewayServer) createOrder(c *gin.Context) {
-	req, _ := c.MustGet("req").(*ordersPB.CreateOrderRequest)
-	// Create order using Orders service
-	resp, err := g.ordersClient.Create(c.Request.Context(), req)
+func (g GatewayServer) deleteUser(c *gin.Context) {
+	req := c.MustGet("req").(*usersPB.DeleteUserRequest)
+	req.Token = c.MustGet("token").(string)
+	resp, err := g.usersClient.Delete(c.Request.Context(), req)
+	c.Set("err", err)
+	c.Set("resp", resp)
+}
 
-	if err != nil {
-		c.String(http.StatusInternalServerError, "Error creating order")
-	}
+func (g GatewayServer) createOrder(c *gin.Context) {
+	req := c.MustGet("req").(*ordersPB.CreateOrderRequest)
+	req.Token = c.MustGet("token").(string)
+	resp, err := g.ordersClient.Create(c.Request.Context(), req)
+	c.Set("err", err)
 	c.Set("resp", resp)
 }
 
 func (g GatewayServer) getOrder(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
+	req := c.MustGet("req").(*ordersPB.GetOrderRequest)
+	var err error
+	if req.Id, err = strconv.ParseInt(c.Param("id"), 10, 64); err != nil {
 		c.String(http.StatusInternalServerError, "Error in url request parameter")
 	}
-	req, _ := c.MustGet("req").(*ordersPB.GetOrderRequest)
-	req.Ids = []int64{id}
-	// Get order using Orders service
+	req.Token = c.MustGet("token").(string)
 	resp, err := g.ordersClient.Get(c.Request.Context(), req)
-
-	if err != nil {
-		c.String(http.StatusInternalServerError, "Error creating order")
-	}
+	c.Set("err", err)
 	c.Set("resp", resp)
 }
 
 func (g GatewayServer) listOrders(c *gin.Context) {
-	c.String(http.StatusNotImplemented, "not implemented yet")
+	req := c.MustGet("req").(*ordersPB.GetOrderRequest)
+	req.Token = c.MustGet("token").(string)
+	resp, err := g.ordersClient.Get(c.Request.Context(), req)
+	c.Set("err", err)
+	c.Set("resp", resp)
 }
 
 func (g GatewayServer) updateOrder(c *gin.Context) {

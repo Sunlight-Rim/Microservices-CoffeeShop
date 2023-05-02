@@ -46,7 +46,7 @@ message CreateOrderResponse {
 
 message GetOrderRequest {
     string token = 1;
-    repeated int64 ids = 2;
+    int64 id = 2;
 }
 
 message GetOrderResponse {

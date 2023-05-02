@@ -17,6 +17,8 @@ curl -sX POST http://localhost:8080/user/login \
           "password": "test"
     }'
 
+# USERS
+
 ### GET information of your account
 curl -sX GET http://localhost:8080/user \
     -H 'Accept: application/json' \
@@ -40,17 +42,32 @@ curl -sX PATCH http://localhost:8080/user \
         }
     }'
 
-### GET all your Orders
-curl http://localhost:8080/order -H 'token: testToken'
+### DELETE your account
+curl -sX "DELETE" http://localhost:8080/user \
+    -H 'Accept: application/json' \
+    -H 'token:  testToken'
 
-### GET one your Order
-curl http://localhost:8080/order/1 -H 'token: testToken'
-
+# ORDERS
 
 ### POST new Order
-curl -X POST http://localhost:8080/order \
+curl -sX POST http://localhost:8080/order \
     -H "Content-Type: application/json" \
-    -d '{"Type":"Espresso", "Sugar":10}'
+    -H 'token: testToken' \
+    -d '{
+        "coffees":[
+            {"type": "Espresso", "sugar": 10}
+        ]
+    }'
+
+### GET all your Orders
+curl -sX GET http://localhost:8080/order \
+    -H "Content-Type: application/json" \
+    -H 'token: testToken'
+
+### GET one your Order
+curl -sX GET http://localhost:8080/order/1 \
+    -H "Content-Type: application/json" \
+    -H 'token: testToken'
 
 ### PATCH updated Order
 curl -X "PATCH" http://localhost:8080/order/1 \

@@ -4,6 +4,7 @@ import (
 	pb "coffeeshop/internal/users/pb"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -18,6 +19,7 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -113,7 +115,9 @@ func (s *UsersServiceServer) Get(ctx context.Context, in *pb.GetUserRequest) (*p
 			return nil, errors.New("token is incorrect")
 		}
 		user.Regdate = timestamppb.New(t)
-		json.Unmarshal([]byte(orders), &user.OrderIds)
+		if orders != "" {
+			json.Unmarshal([]byte("["+orders[2:]+"]"), &user.OrderIds)
+		}
 		users = append(users, &user)
 	} else {
 		// Check token
@@ -129,10 +133,12 @@ func (s *UsersServiceServer) Get(ctx context.Context, in *pb.GetUserRequest) (*p
 			return nil, errors.New("there is some problem with DB")
 		}
 		defer rows.Close()
-		for i := 0; rows.Next(); i++ {
+		for rows.Next() {
 			user := pb.User{}
 			rows.Scan(&user.Id, &user.Username, &user.Address, &t, &orders)
-			json.Unmarshal([]byte(orders), &user.OrderIds)
+			if orders != "" {
+				json.Unmarshal([]byte("["+orders[2:]+"]"), &user.OrderIds)
+			}
 			user.Regdate = timestamppb.New(t)
 			users = append(users, &user)
 		}
@@ -147,10 +153,15 @@ func (s *UsersServiceServer) Update(ctx context.Context, in *pb.UpdateUserReques
 		orders string
 	)
 	if s.db.QueryRow("select Id, Username, Address, RegDate, OrderIds from USERS where Token == $1",
-		in.GetToken()).Scan(&user.Id, &user.Username, &user.Address, &t, &orders); user.Username == "" {
+		in.GetToken()).Scan(&user.Id, &user.Username, &user.Address, &t, &orders); user.Id == 0 {
 		return nil, errors.New("token is incorrect")
 	}
 	if username := in.GetUser().Username; username != "" {
+		// Check if name is already exists
+		var id int64
+		if s.db.QueryRow("select Id from USERS where Username == $1", username).Scan(&id); id != 0 {
+			return nil, errors.New("the username is already taken")
+		}
 		user.Username = username
 	}
 	if address := in.GetUser().Address; address != "" {
@@ -162,7 +173,57 @@ func (s *UsersServiceServer) Update(ctx context.Context, in *pb.UpdateUserReques
 		log.Printf("DB request error: %v", err)
 		return nil, errors.New("there is some problem with DB")
 	}
-	json.Unmarshal([]byte(orders), &user.OrderIds)
+	json.Unmarshal([]byte("["+orders[2:]+"]"), &user.OrderIds)
 	user.Regdate = timestamppb.New(t)
 	return &pb.UpdateUserResponse{User: user}, nil
+}
+
+func (s *UsersServiceServer) Delete(ctx context.Context, in *pb.DeleteUserRequest) (*pb.DeleteUserResponse, error) {
+	var (
+		user   = &pb.User{}
+		t      time.Time
+		orders string
+	)
+	if s.db.QueryRow("select Id, Username, Address, RegDate, OrderIds from USERS where Token == $1",
+		in.GetToken()).Scan(&user.Id, &user.Username, &user.Address, &t, &orders); user.Id == 0 {
+		return nil, errors.New("token is incorrect")
+	}
+	// Delete account
+	if _, err := s.db.Exec("delete from USERS where Id == $1", user.Id); err != nil {
+		log.Printf("DB request error: %v", err)
+		return nil, errors.New("there is some problem with DB")
+	}
+	json.Unmarshal([]byte("["+orders[2:]+"]"), &user.OrderIds)
+	user.Regdate = timestamppb.New(t)
+	return &pb.DeleteUserResponse{User: user}, nil
+}
+
+func (s *UsersServiceServer) AuthUser(ctx context.Context, in *pb.AuthUserRequest) (*pb.AuthUserResponse, error) {
+	var id int64
+	if s.db.QueryRow("select Id from USERS where Token == $1",
+		in.GetToken()).Scan(&id); id == 0 {
+		return nil, errors.New("token is incorrect")
+	}
+	return &pb.AuthUserResponse{Id: id}, nil
+}
+
+func (s *UsersServiceServer) GetUserOrders(ctx context.Context, in *pb.GetUserOrdersRequest) (*pb.GetUserOrdersResponse, error) {
+	var (
+		orders    string
+		ordersIds []int64
+	)
+	s.db.QueryRow("select OrderIds from USERS where Id == $1", in.GetId()).Scan(&orders)
+	if orders != "" {
+		json.Unmarshal([]byte("["+orders[2:]+"]"), &ordersIds)
+	}
+	return &pb.GetUserOrdersResponse{OrderIds: ordersIds}, nil
+}
+
+func (s *UsersServiceServer) CreateUserOrder(ctx context.Context, in *pb.CreateUserOrderRequest) (*emptypb.Empty, error) {
+	if _, err := s.db.Exec("update USERS set OrderIds = OrderIds || $1 where Id == $2",
+		", "+strconv.FormatInt(in.GetOrderId(), 10), in.GetId()); err != nil {
+		log.Printf("DB request error: %v", err)
+		return nil, errors.New("there is some problem with DB")
+	}
+	return &emptypb.Empty{}, nil
 }
