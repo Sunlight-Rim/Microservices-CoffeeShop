@@ -5,7 +5,7 @@ curl -sX POST http://localhost:8080/user/signup \
     -H 'Accept: application/json' \
     -d '{
             "username": "test",
-            "password": "test",
+            "password": "testpass",
             "address":  "test"
     }'
 
@@ -14,7 +14,7 @@ curl -sX POST http://localhost:8080/user/login \
     -H 'Accept: application/json' \
     -d '{
           "username": "test",
-          "password": "test"
+          "password": "testpass"
     }'
 
 # USERS

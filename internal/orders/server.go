@@ -128,6 +128,9 @@ func (s *OrdersServiceServer) Get(ctx context.Context, in *pb.GetOrderRequest) (
 			break
 		}
 	}
+	if order.Id == 0 {
+		return nil, errors.New("order not found")
+	}
 	order.Date = timestamppb.New(date)
 	json.Unmarshal([]byte(coffees), &order.Coffees)
 	return &pb.GetOrderResponse{Order: &order}, nil

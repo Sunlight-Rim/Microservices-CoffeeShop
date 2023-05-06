@@ -80,8 +80,8 @@ func (s *UsersServiceServer) Create(ctx context.Context, in *pb.CreateUserReques
 		Regdate:  timestamppb.New(regdate),
 		OrderIds: nil,
 	}
-	res, err := s.db.Exec("INSERT INTO users (username, password, address, reg_date) VALUES ($1, $2, $3, $4)",
-						  &user.Username, in.GetPassword(), &user.Address, regdate)
+	res, err := s.db.Exec("INSERT INTO users (username, password, address, reg_date, order_ids) VALUES " +
+						  "($1, $2, $3, $4, '')", &user.Username, in.GetPassword(), &user.Address, regdate)
 	if err != nil {
 		log.Printf("DB request error: %v", err)
 		return nil, errors.New("there is some problem with DB")
@@ -217,7 +217,7 @@ func (s *UsersServiceServer) AuthUser(ctx context.Context, in *pb.AuthUserReques
 
 func (s *UsersServiceServer) CreateUserOrder(ctx context.Context, in *pb.CreateUserOrderRequest) (*emptypb.Empty, error) {
 	if _, err := s.db.Exec("UPDATE users SET order_ids = order_ids || $1 WHERE id == $2",
-						   strconv.FormatInt(in.GetOrderId(), 10)+",", in.GetId()); err != nil {
+						   ","+strconv.FormatInt(in.GetOrderId(), 10), in.GetId()); err != nil {
 		log.Printf("DB request error: %v", err)
 		return nil, errors.New("there is some problem with DB")
 	}
@@ -228,6 +228,6 @@ func (s *UsersServiceServer) GetUserOrders(ctx context.Context, in *pb.GetUserOr
 	var ( orders    string
 		  ordersIds []int64 )
 	s.db.QueryRow("SELECT order_ids FROM users WHERE id == $1", in.GetId()).Scan(&orders)
-	if orders != "" { json.Unmarshal([]byte("["+orders[:len(orders)-1]+"]"), &ordersIds) }
+	if orders != "" { json.Unmarshal([]byte("["+orders[1:]+"]"), &ordersIds) }
 	return &pb.GetUserOrdersResponse{OrderIds: ordersIds}, nil
 }

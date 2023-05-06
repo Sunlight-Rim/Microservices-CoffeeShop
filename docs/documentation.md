@@ -106,14 +106,14 @@ Response:
 
 For getting one, just send:
 ```shell
-curl -X GET http://localhost:8080/order/1 \
+curl -X GET http://localhost:8080/order/2 \
     -H "Content-Type: application/json" \
     -H 'token: yBldmlsIGV4ZXM='
 ```
 Response:
 ```json
   "order": {
-    "id": "31",
+    "id": "2",
     "coffees": [
       {
         "type": "Espresso",
@@ -131,15 +131,41 @@ Response:
 
 ### Get all Orders
 
-To get all orders:
+Get all orders:
 ```shell
-curl -X GET http://localhost:8080/order/1 \
+curl -X GET http://localhost:8080/order \
     -H "Content-Type: application/json" \
     -H 'token: yBldmlsIGV4ZXM='
 ```
 Response:
 ```json
-
+"orders": [
+  {
+    "id": "1",
+    "coffees": [
+      {
+        "type": "Americano"
+      }
+    ],
+    "total": 2.5,
+    "date": "2023-05-05T23:25:13Z"
+  },
+  {
+    "id": "2",
+    "coffees": [
+      {
+        "type": "Espresso",
+        "sugar": 10
+      },
+      {
+        "type": "Americano",
+        "sugar": 8
+      }
+    ],
+    "total": 4.5,
+    "date": "2023-05-06T22:07:51Z"
+  }
+]
 ```
 
 ## Users
