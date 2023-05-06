@@ -71,29 +71,80 @@ The token is regenerated after you change your password.
 ### Create new Order
 
 You can order one coffee:
-```
-
+```shell
+curl -X POST http://localhost:8080/order \
+    -H "Content-Type: application/json" \
+    -H 'token: NyBldmlsIGV4ZXM=' \
+    -d '{
+        "coffees":[
+            {"type": "Espresso", "sugar": 10},
+            {"type": "Americano", "sugar": 8}
+        ]
+    }'
 ```
 Response:
 
-```
-
+```json
+  "order": {
+    "id": "2",
+    "coffees": [
+      {
+        "type": "Espresso",
+        "sugar": 10
+      },
+      {
+        "type": "Americano",
+        "sugar": 8
+      }
+    ],
+    "total": 4.5,
+    "date": "2023-05-06T22:07:51.599183433Z"
+  }
 ```
 
 ### Get one Order
 
-For getting one, just send
-```
-
+For getting one, just send:
+```shell
+curl -X GET http://localhost:8080/order/1 \
+    -H "Content-Type: application/json" \
+    -H 'token: yBldmlsIGV4ZXM='
 ```
 Response:
+```json
+  "order": {
+    "id": "31",
+    "coffees": [
+      {
+        "type": "Espresso",
+        "sugar": 10
+      },
+      {
+        "type": "Americano",
+        "sugar": 8
+      }
+    ],
+    "total": 4.5,
+    "date": "2023-05-06T22:07:51Z"
+  }
 ```
+
+### Get all Orders
+
+To get all orders:
+```shell
+curl -X GET http://localhost:8080/order/1 \
+    -H "Content-Type: application/json" \
+    -H 'token: yBldmlsIGV4ZXM='
+```
+Response:
+```json
 
 ```
 
 ## Users
 
-### GET
+### Get your Account info
 
 You can get information about your account:
 ```shell
@@ -110,6 +161,8 @@ Response:
   "regdate":   "2023-04-30T18:47:35Z"
 }
 ```
+
+#### Get other Users info
 
 Also you can get information about other accounts by specifying their IDs:
 ```shell
@@ -138,7 +191,7 @@ Response:
 ]
 ```
 
-### UPDATE
+### Update your Account
 
 You can update some information of your account:
 ```shell
@@ -163,7 +216,7 @@ Response:
 ]
 ```
 
-### DELETE
+### Delete Account
 
 To delete an account, you can use the DELETE method:
 ```shell

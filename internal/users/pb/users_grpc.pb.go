@@ -23,6 +23,7 @@ const (
 	UsersService_Create_FullMethodName          = "/users.UsersService/Create"
 	UsersService_Login_FullMethodName           = "/users.UsersService/Login"
 	UsersService_Get_FullMethodName             = "/users.UsersService/Get"
+	UsersService_List_FullMethodName            = "/users.UsersService/List"
 	UsersService_Update_FullMethodName          = "/users.UsersService/Update"
 	UsersService_Delete_FullMethodName          = "/users.UsersService/Delete"
 	UsersService_AuthUser_FullMethodName        = "/users.UsersService/AuthUser"
@@ -37,7 +38,8 @@ const (
 type UsersServiceClient interface {
 	Create(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error)
 	Login(ctx context.Context, in *LoginUserRequest, opts ...grpc.CallOption) (*LoginUserResponse, error)
-	Get(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error)
+	Get(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*ListUserResponse, error)
+	List(ctx context.Context, in *ListUserRequest, opts ...grpc.CallOption) (*ListUserResponse, error)
 	Update(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*UpdateUserResponse, error)
 	Delete(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*DeleteUserResponse, error)
 	// only for OrdersService interaction
@@ -73,9 +75,18 @@ func (c *usersServiceClient) Login(ctx context.Context, in *LoginUserRequest, op
 	return out, nil
 }
 
-func (c *usersServiceClient) Get(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error) {
-	out := new(GetUserResponse)
+func (c *usersServiceClient) Get(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*ListUserResponse, error) {
+	out := new(ListUserResponse)
 	err := c.cc.Invoke(ctx, UsersService_Get_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *usersServiceClient) List(ctx context.Context, in *ListUserRequest, opts ...grpc.CallOption) (*ListUserResponse, error) {
+	out := new(ListUserResponse)
+	err := c.cc.Invoke(ctx, UsersService_List_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +153,8 @@ func (c *usersServiceClient) DeleteUserOrder(ctx context.Context, in *DeleteUser
 type UsersServiceServer interface {
 	Create(context.Context, *CreateUserRequest) (*CreateUserResponse, error)
 	Login(context.Context, *LoginUserRequest) (*LoginUserResponse, error)
-	Get(context.Context, *GetUserRequest) (*GetUserResponse, error)
+	Get(context.Context, *GetUserRequest) (*ListUserResponse, error)
+	List(context.Context, *ListUserRequest) (*ListUserResponse, error)
 	Update(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error)
 	Delete(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error)
 	// only for OrdersService interaction
@@ -163,8 +175,11 @@ func (UnimplementedUsersServiceServer) Create(context.Context, *CreateUserReques
 func (UnimplementedUsersServiceServer) Login(context.Context, *LoginUserRequest) (*LoginUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
 }
-func (UnimplementedUsersServiceServer) Get(context.Context, *GetUserRequest) (*GetUserResponse, error) {
+func (UnimplementedUsersServiceServer) Get(context.Context, *GetUserRequest) (*ListUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (UnimplementedUsersServiceServer) List(context.Context, *ListUserRequest) (*ListUserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
 }
 func (UnimplementedUsersServiceServer) Update(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
@@ -247,6 +262,24 @@ func _UsersService_Get_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UsersServiceServer).Get(ctx, req.(*GetUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UsersService_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UsersServiceServer).List(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UsersService_List_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UsersServiceServer).List(ctx, req.(*ListUserRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -377,6 +410,10 @@ var UsersService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Get",
 			Handler:    _UsersService_Get_Handler,
+		},
+		{
+			MethodName: "List",
+			Handler:    _UsersService_List_Handler,
 		},
 		{
 			MethodName: "Update",

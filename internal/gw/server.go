@@ -55,7 +55,7 @@ func Start() error {
 	{
 		routerOrders.POST("", authToken, marshalMW(&ordersPB.CreateOrderRequest{}), g.createOrder)
 		routerOrders.GET(":id", authToken, marshalMW(&ordersPB.GetOrderRequest{}), g.getOrder)
-		routerOrders.GET("", authToken, marshalMW(&ordersPB.GetOrderRequest{}), g.listOrders)
+		routerOrders.GET("", authToken, marshalMW(&ordersPB.ListOrderRequest{}), g.listOrders)
 		// routerOrders.PUT(":id", g.updateOrder)
 		// routerOrders.DELETE(":id", g.deleteOrder)
 	}
@@ -63,7 +63,7 @@ func Start() error {
 	{
 		routerUsers.POST("/signup", marshalMW(&usersPB.CreateUserRequest{}), g.createUser)
 		routerUsers.POST("/login", marshalMW(&usersPB.LoginUserRequest{}), g.loginUser)
-		routerUsers.GET("", authToken, marshalMW(&usersPB.GetUserRequest{}), g.getUser)
+		routerUsers.GET("", authToken, marshalMW(&usersPB.ListUserRequest{}), g.listUser)
 		routerUsers.PATCH("", authToken, marshalMW(&usersPB.UpdateUserRequest{}), g.updateUser)
 		routerUsers.DELETE("", authToken, marshalMW(&usersPB.DeleteUserRequest{}), g.deleteUser)
 	}
@@ -124,15 +124,18 @@ func (g GatewayServer) loginUser(c *gin.Context) {
 	c.Set("resp", resp)
 }
 
-func (g GatewayServer) getUser(c *gin.Context) {
-	req := c.MustGet("req").(*usersPB.GetUserRequest)
-	// if req == nil {
-	// 	Get
-	// } else {
-	// 	List
-	// }
-	req.Token = c.MustGet("token").(string)
-	resp, err := g.usersClient.Get(c.Request.Context(), req)
+func (g GatewayServer) listUser(c *gin.Context) {
+	if reqList := c.MustGet("req").(*usersPB.ListUserRequest); reqList.Ids != nil {
+		reqList.Token = c.MustGet("token").(string)
+		resp, err := g.usersClient.List(c.Request.Context(), reqList)
+		c.Set("err", err)
+		c.Set("resp", resp)
+		return
+	}
+	var reqGet usersPB.GetUserRequest
+	jsonpb.Unmarshal(c.Request.Body, &reqGet)
+	reqGet.Token = c.MustGet("token").(string)
+	resp, err := g.usersClient.Get(c.Request.Context(), &reqGet)
 	c.Set("err", err)
 	c.Set("resp", resp)
 }
@@ -174,9 +177,9 @@ func (g GatewayServer) getOrder(c *gin.Context) {
 }
 
 func (g GatewayServer) listOrders(c *gin.Context) {
-	req := c.MustGet("req").(*ordersPB.GetOrderRequest)
+	req := c.MustGet("req").(*ordersPB.ListOrderRequest)
 	req.Token = c.MustGet("token").(string)
-	resp, err := g.ordersClient.Get(c.Request.Context(), req)
+	resp, err := g.ordersClient.List(c.Request.Context(), req)
 	c.Set("err", err)
 	c.Set("resp", resp)
 }

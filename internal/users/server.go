@@ -20,7 +20,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
-	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 const ( // TODO: move to config
@@ -60,107 +60,116 @@ func Start() {
 /// API METHODS (gRPC)
 
 func (s *UsersServiceServer) Create(ctx context.Context, in *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
-	// Check if name is already exists
+	// Validate input
+	if in.GetUsername() == "" {
+		return nil, errors.New("enter correct username")
+	}
+	if in.GetPassword() == "" || len(in.GetPassword()) < 6 {
+		return nil, errors.New("password must exceed 6 chars")
+	}
+	// Check if name is already exist
 	var id int64
-	if s.db.QueryRow("select Id from USERS where Username == $1", in.GetUsername()).Scan(&id); id != 0 {
-		return nil, errors.New("the username is already taken")
+	if s.db.QueryRow("SELECT id FROM users WHERE username == $1", in.GetUsername()).Scan(&id); id != 0 {
+		return nil, errors.New("this username is already taken")
 	}
 	// Fill a new row
-	t := time.Now()
-	res, err := s.db.Exec("insert into USERS (Username, Password, Address, RegDate, OrderIds, Token) values ($1, $2, $3, $4, '', '')",
-		in.GetUsername(), in.GetPassword(), in.GetAddress(), t.Format(time.RFC3339))
+	regdate := time.Now()
+	user := pb.User{
+		Username: in.GetUsername(),
+		Address:  in.GetAddress(),
+		Regdate:  timestamppb.New(regdate),
+		OrderIds: nil,
+	}
+	res, err := s.db.Exec("INSERT INTO users (username, password, address, reg_date) VALUES ($1, $2, $3, $4)",
+						  &user.Username, in.GetPassword(), &user.Address, regdate)
 	if err != nil {
 		log.Printf("DB request error: %v", err)
 		return nil, errors.New("there is some problem with DB")
 	}
-	id, _ = res.LastInsertId()
-	return &pb.CreateUserResponse{User: &pb.User{
-		Id:       id,
-		Username: in.GetUsername(),
-		Address:  in.GetAddress(),
-		Regdate:  timestamppb.New(t),
-		OrderIds: nil,
-	}}, nil
+	user.Id, _ = res.LastInsertId()
+	return &pb.CreateUserResponse{User: &user}, nil
 }
 
 func (s *UsersServiceServer) Login(ctx context.Context, in *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
-	// Check for username and password is correct
+	// Check username and password
 	var id int64
-	if s.db.QueryRow("select Id from USERS where Username == $1 and Password == $2",
-		in.GetUsername(), in.GetPassword()).Scan(&id); id == 0 {
+	if s.db.QueryRow("SELECT id FROM users WHERE username == $1 AND password == $2",
+					 in.GetUsername(), in.GetPassword()).Scan(&id); id == 0 {
 		return nil, errors.New("username or password is incorrect")
 	}
 	// Generate token
-	t := time.Now()
-	hash := md5.Sum([]byte(in.GetUsername() + in.GetPassword() + t.Format(time.RFC3339)))
-	token := hex.EncodeToString(hash[:])
-	if _, err := s.db.Exec("update USERS set Token = $1 where Id == $2", token, id); err != nil {
+	var token string
+	for i := 0; i < 10; i++ {
+		hash := md5.Sum([]byte(in.GetUsername() + in.GetPassword() + time.Now().Format(time.RFC3339)))
+		token = hex.EncodeToString(hash[:])
+		var checkId int64
+		if s.db.QueryRow("SELECT id FROM users WHERE token == $1", token).Scan(&checkId); checkId == 0 { break }
+	}
+	if _, err := s.db.Exec("UPDATE users SET token = $1 WHERE id == $2", token, id); err != nil {
 		log.Printf("DB request error: %v", err)
 		return nil, errors.New("there is some problem with DB")
 	}
 	return &pb.LoginUserResponse{Id: id, Token: token}, nil
 }
 
-func (s *UsersServiceServer) Get(ctx context.Context, in *pb.GetUserRequest) (*pb.GetUserResponse, error) {
-	var (
-		users  = []*pb.User{}
-		t      time.Time
-		orders string
-	)
-	// Find user account by token if Ids not requested
-	if in.GetIds() == nil {
-		user := pb.User{}
-		if s.db.QueryRow("select Id, Username, Address, RegDate, OrderIds from USERS where Token == $1",
-			in.GetToken()).Scan(&user.Id, &user.Username, &user.Address, &t, &orders); user.Id == 0 {
-			return nil, errors.New("token is incorrect")
-		}
-		user.Regdate = timestamppb.New(t)
-		if orders != "" {
-			json.Unmarshal([]byte("["+orders[2:]+"]"), &user.OrderIds)
-		}
-		users = append(users, &user)
-	} else {
-		// Check token
-		var id int64
-		if s.db.QueryRow("select Id from USERS where Token == $1", in.GetToken()).Scan(&id); id == 0 {
-			return nil, errors.New("token is incorrect")
-		}
-		// Find users by requested Ids
-		rows, err := s.db.Query("select Id, Username, Address, RegDate, OrderIds from USERS where Id in (" +
-			strings.Trim(strings.Join(strings.Fields(fmt.Sprint(in.GetIds())), ","), "[]") + ")")
-		if err != nil {
-			log.Printf("DB request error: %v", err)
-			return nil, errors.New("there is some problem with DB")
-		}
-		defer rows.Close()
-		for rows.Next() {
-			user := pb.User{}
-			rows.Scan(&user.Id, &user.Username, &user.Address, &t, &orders)
-			if orders != "" {
-				json.Unmarshal([]byte("["+orders[2:]+"]"), &user.OrderIds)
-			}
-			user.Regdate = timestamppb.New(t)
-			users = append(users, &user)
-		}
+func (s *UsersServiceServer) Get(ctx context.Context, in *pb.GetUserRequest) (*pb.ListUserResponse, error) {
+	var ( user    pb.User
+		  orders  string
+		  regdate time.Time )
+	// Check token & get data
+	if s.db.QueryRow("SELECT id, username, address, reg_date, order_ids FROM users WHERE token == $1",
+					 in.GetToken()).Scan(&user.Id, &user.Username, &user.Address, &regdate, &orders);
+					 user.Id == 0 {
+		return nil, errors.New("token is incorrect")
 	}
-	return &pb.GetUserResponse{Users: users}, nil
+	if orders != "" { json.Unmarshal([]byte("["+orders[:len(orders)-1]+"]"), &user.OrderIds) }
+	user.Regdate = timestamppb.New(regdate)
+	return &pb.ListUserResponse{Users: []*pb.User{ &user }}, nil
+}
+
+func (s *UsersServiceServer) List(ctx context.Context, in *pb.ListUserRequest) (*pb.ListUserResponse, error) {
+	// Check token
+	var id int64
+	if s.db.QueryRow("SELECT id FROM users WHERE token == $1", in.GetToken()).Scan(&id); id == 0 {
+		return nil, errors.New("token is incorrect")
+	}
+	// Find users by requested Ids
+	ids := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(in.GetIds())), ","), "[]")
+	rows, err := s.db.Query("SELECT id, username, address, reg_date, order_ids FROM users WHERE id IN ("+ids+")")
+	if err != nil {
+		log.Printf("DB request error: %v", err)
+		return nil, errors.New("there is some problem with DB")
+	}
+	defer rows.Close()
+	var ( users   []*pb.User
+		  orders  string
+		  regdate time.Time )
+	// Fill response users data
+	for rows.Next() {
+		user := pb.User{}
+		rows.Scan(&user.Id, &user.Username, &user.Address, &regdate, &orders)
+		if orders != "" { json.Unmarshal([]byte("["+orders[:len(orders)-1]+"]"), &user.OrderIds) }
+		user.Regdate = timestamppb.New(regdate)
+		users = append(users, &user)
+	}
+	return &pb.ListUserResponse{Users: users}, nil
 }
 
 func (s *UsersServiceServer) Update(ctx context.Context, in *pb.UpdateUserRequest) (*pb.UpdateUserResponse, error) {
-	var (
-		user   = &pb.User{}
-		t      time.Time
-		orders string
-	)
-	if s.db.QueryRow("select Id, Username, Address, RegDate, OrderIds from USERS where Token == $1",
-		in.GetToken()).Scan(&user.Id, &user.Username, &user.Address, &t, &orders); user.Id == 0 {
+	var ( user    pb.User
+		  orders  string
+		  regdate time.Time )
+	// Check token & get data
+	if s.db.QueryRow("SELECT id, username, address, reg_date, order_ids FROM users " +
+					 "WHERE token == $1", in.GetToken()).Scan(&user.Id, &user.Username,
+					  &user.Address, &regdate, &orders); user.Id == 0 {
 		return nil, errors.New("token is incorrect")
 	}
+	// Check if name is already exist
 	if username := in.GetUser().Username; username != "" {
-		// Check if name is already exists
 		var id int64
-		if s.db.QueryRow("select Id from USERS where Username == $1", username).Scan(&id); id != 0 {
-			return nil, errors.New("the username is already taken")
+		if s.db.QueryRow("SELECT id FROM users WHERE username == $1", username).Scan(&id); id != 0 {
+			return nil, errors.New("this username is already taken")
 		}
 		user.Username = username
 	}
@@ -168,62 +177,57 @@ func (s *UsersServiceServer) Update(ctx context.Context, in *pb.UpdateUserReques
 		user.Address = address
 	}
 	// Update info
-	if _, err := s.db.Exec("update USERS set Username = $1, Address = $2 where Token == $3",
-		user.Username, user.Address, in.GetToken()); err != nil {
+	if _, err := s.db.Exec("UPDATE users SET username = $1, address = $2 WHERE token == $3",
+						   &user.Username, &user.Address, in.GetToken()); err != nil {
 		log.Printf("DB request error: %v", err)
 		return nil, errors.New("there is some problem with DB")
 	}
-	json.Unmarshal([]byte("["+orders[2:]+"]"), &user.OrderIds)
-	user.Regdate = timestamppb.New(t)
-	return &pb.UpdateUserResponse{User: user}, nil
+	if orders != "" { json.Unmarshal([]byte("["+orders[:len(orders)-1]+"]"), &user.OrderIds) }
+	user.Regdate = timestamppb.New(regdate)
+	return &pb.UpdateUserResponse{User: &user}, nil
 }
 
 func (s *UsersServiceServer) Delete(ctx context.Context, in *pb.DeleteUserRequest) (*pb.DeleteUserResponse, error) {
-	var (
-		user   = &pb.User{}
-		t      time.Time
-		orders string
-	)
-	if s.db.QueryRow("select Id, Username, Address, RegDate, OrderIds from USERS where Token == $1",
-		in.GetToken()).Scan(&user.Id, &user.Username, &user.Address, &t, &orders); user.Id == 0 {
+	var ( user    pb.User
+		  orders  string
+		  regdate time.Time )
+	// Check token & get data
+	if s.db.QueryRow("SELECT id, username, address, reg_date, order_ids FROM users " +
+					 "WHERE token == $1", in.GetToken()).Scan(&user.Id, &user.Username,
+					 &user.Address, &regdate, &orders); user.Id == 0 {
 		return nil, errors.New("token is incorrect")
 	}
 	// Delete account
-	if _, err := s.db.Exec("delete from USERS where Id == $1", user.Id); err != nil {
+	if _, err := s.db.Exec("DELETE FROM users WHERE id == $1", user.Id); err != nil {
 		log.Printf("DB request error: %v", err)
 		return nil, errors.New("there is some problem with DB")
 	}
-	json.Unmarshal([]byte("["+orders[2:]+"]"), &user.OrderIds)
-	user.Regdate = timestamppb.New(t)
-	return &pb.DeleteUserResponse{User: user}, nil
+	if orders != "" { json.Unmarshal([]byte("["+orders[:len(orders)-1]+"]"), &user.OrderIds) }
+	user.Regdate = timestamppb.New(regdate)
+	return &pb.DeleteUserResponse{User: &user}, nil
 }
 
 func (s *UsersServiceServer) AuthUser(ctx context.Context, in *pb.AuthUserRequest) (*pb.AuthUserResponse, error) {
 	var id int64
-	if s.db.QueryRow("select Id from USERS where Token == $1",
-		in.GetToken()).Scan(&id); id == 0 {
+	if s.db.QueryRow("SELECT id FROM users WHERE token == $1", in.GetToken()).Scan(&id); id == 0 {
 		return nil, errors.New("token is incorrect")
 	}
 	return &pb.AuthUserResponse{Id: id}, nil
 }
 
-func (s *UsersServiceServer) GetUserOrders(ctx context.Context, in *pb.GetUserOrdersRequest) (*pb.GetUserOrdersResponse, error) {
-	var (
-		orders    string
-		ordersIds []int64
-	)
-	s.db.QueryRow("select OrderIds from USERS where Id == $1", in.GetId()).Scan(&orders)
-	if orders != "" {
-		json.Unmarshal([]byte("["+orders[2:]+"]"), &ordersIds)
-	}
-	return &pb.GetUserOrdersResponse{OrderIds: ordersIds}, nil
-}
-
 func (s *UsersServiceServer) CreateUserOrder(ctx context.Context, in *pb.CreateUserOrderRequest) (*emptypb.Empty, error) {
-	if _, err := s.db.Exec("update USERS set OrderIds = OrderIds || $1 where Id == $2",
-		", "+strconv.FormatInt(in.GetOrderId(), 10), in.GetId()); err != nil {
+	if _, err := s.db.Exec("UPDATE users SET order_ids = order_ids || $1 WHERE id == $2",
+						   strconv.FormatInt(in.GetOrderId(), 10)+",", in.GetId()); err != nil {
 		log.Printf("DB request error: %v", err)
 		return nil, errors.New("there is some problem with DB")
 	}
 	return &emptypb.Empty{}, nil
+}
+
+func (s *UsersServiceServer) GetUserOrders(ctx context.Context, in *pb.GetUserOrdersRequest) (*pb.GetUserOrdersResponse, error) {
+	var ( orders    string
+		  ordersIds []int64 )
+	s.db.QueryRow("SELECT order_ids FROM users WHERE id == $1", in.GetId()).Scan(&orders)
+	if orders != "" { json.Unmarshal([]byte("["+orders[:len(orders)-1]+"]"), &ordersIds) }
+	return &pb.GetUserOrdersResponse{OrderIds: ordersIds}, nil
 }

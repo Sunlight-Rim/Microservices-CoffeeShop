@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	OrdersService_Create_FullMethodName = "/orders.OrdersService/Create"
 	OrdersService_Get_FullMethodName    = "/orders.OrdersService/Get"
+	OrdersService_List_FullMethodName   = "/orders.OrdersService/List"
 	OrdersService_Update_FullMethodName = "/orders.OrdersService/Update"
 	OrdersService_Delete_FullMethodName = "/orders.OrdersService/Delete"
 )
@@ -31,6 +32,7 @@ const (
 type OrdersServiceClient interface {
 	Create(ctx context.Context, in *CreateOrderRequest, opts ...grpc.CallOption) (*CreateOrderResponse, error)
 	Get(ctx context.Context, in *GetOrderRequest, opts ...grpc.CallOption) (*GetOrderResponse, error)
+	List(ctx context.Context, in *ListOrderRequest, opts ...grpc.CallOption) (*ListOrderResponse, error)
 	Update(ctx context.Context, in *UpdateOrderRequest, opts ...grpc.CallOption) (*UpdateOrderResponse, error)
 	Delete(ctx context.Context, in *DeleteOrderRequest, opts ...grpc.CallOption) (*DeleteOrderResponse, error)
 }
@@ -61,6 +63,15 @@ func (c *ordersServiceClient) Get(ctx context.Context, in *GetOrderRequest, opts
 	return out, nil
 }
 
+func (c *ordersServiceClient) List(ctx context.Context, in *ListOrderRequest, opts ...grpc.CallOption) (*ListOrderResponse, error) {
+	out := new(ListOrderResponse)
+	err := c.cc.Invoke(ctx, OrdersService_List_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *ordersServiceClient) Update(ctx context.Context, in *UpdateOrderRequest, opts ...grpc.CallOption) (*UpdateOrderResponse, error) {
 	out := new(UpdateOrderResponse)
 	err := c.cc.Invoke(ctx, OrdersService_Update_FullMethodName, in, out, opts...)
@@ -85,6 +96,7 @@ func (c *ordersServiceClient) Delete(ctx context.Context, in *DeleteOrderRequest
 type OrdersServiceServer interface {
 	Create(context.Context, *CreateOrderRequest) (*CreateOrderResponse, error)
 	Get(context.Context, *GetOrderRequest) (*GetOrderResponse, error)
+	List(context.Context, *ListOrderRequest) (*ListOrderResponse, error)
 	Update(context.Context, *UpdateOrderRequest) (*UpdateOrderResponse, error)
 	Delete(context.Context, *DeleteOrderRequest) (*DeleteOrderResponse, error)
 	mustEmbedUnimplementedOrdersServiceServer()
@@ -99,6 +111,9 @@ func (UnimplementedOrdersServiceServer) Create(context.Context, *CreateOrderRequ
 }
 func (UnimplementedOrdersServiceServer) Get(context.Context, *GetOrderRequest) (*GetOrderResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (UnimplementedOrdersServiceServer) List(context.Context, *ListOrderRequest) (*ListOrderResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
 }
 func (UnimplementedOrdersServiceServer) Update(context.Context, *UpdateOrderRequest) (*UpdateOrderResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
@@ -155,6 +170,24 @@ func _OrdersService_Get_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OrdersService_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListOrderRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrdersServiceServer).List(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OrdersService_List_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrdersServiceServer).List(ctx, req.(*ListOrderRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _OrdersService_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateOrderRequest)
 	if err := dec(in); err != nil {
@@ -205,6 +238,10 @@ var OrdersService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Get",
 			Handler:    _OrdersService_Get_Handler,
+		},
+		{
+			MethodName: "List",
+			Handler:    _OrdersService_List_Handler,
 		},
 		{
 			MethodName: "Update",

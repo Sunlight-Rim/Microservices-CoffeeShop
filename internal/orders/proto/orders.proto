@@ -9,7 +9,8 @@ option go_package = ".;orders_pb";
 
 service OrdersService {
     rpc Create (CreateOrderRequest) returns (CreateOrderResponse);
-    rpc Get (GetOrderRequest) returns (GetOrderResponse); // one or more
+    rpc Get (GetOrderRequest) returns (GetOrderResponse);
+    rpc List (ListOrderRequest) returns (ListOrderResponse);
     rpc Update (UpdateOrderRequest) returns (UpdateOrderResponse);
     rpc Delete (DeleteOrderRequest) returns (DeleteOrderResponse);
 }
@@ -50,6 +51,17 @@ message GetOrderRequest {
 }
 
 message GetOrderResponse {
+    Order order = 1;
+}
+
+
+// List
+
+message ListOrderRequest {
+    string token = 1;
+}
+
+message ListOrderResponse {
     repeated Order orders = 1;
 }
 

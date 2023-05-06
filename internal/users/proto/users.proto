@@ -11,7 +11,8 @@ option go_package = ".;users_pb";
 service UsersService {
     rpc Create (CreateUserRequest) returns (CreateUserResponse);
     rpc Login (LoginUserRequest) returns (LoginUserResponse);
-    rpc Get (GetUserRequest) returns (GetUserResponse); // one or more
+    rpc Get (GetUserRequest) returns (ListUserResponse);
+    rpc List (ListUserRequest) returns (ListUserResponse);
     rpc Update (UpdateUserRequest) returns (UpdateUserResponse);
     rpc Delete (DeleteUserRequest) returns (DeleteUserResponse);
     // only for OrdersService interaction
@@ -58,10 +59,16 @@ message LoginUserResponse {
 
 message GetUserRequest {
     string token = 1;
+}
+
+// List
+
+message ListUserRequest {
+    string token = 1;
     repeated int64 ids = 2;
 }
 
-message GetUserResponse {
+message ListUserResponse {
     repeated User users = 1;
 }
 
