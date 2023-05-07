@@ -76,9 +76,9 @@ curl -X POST http://localhost:8080/order \
     -H "Content-Type: application/json" \
     -H 'token: NyBldmlsIGV4ZXM=' \
     -d '{
-        "coffees":[
-            {"type": "Espresso", "sugar": 10},
-            {"type": "Americano", "sugar": 8}
+        "coffees": [
+          {"type": "Espresso", "sugar": 10},
+          {"type": "Americano", "sugar": 8}
         ]
     }'
 ```
@@ -88,17 +88,11 @@ Response:
   "order": {
     "id": "2",
     "coffees": [
-      {
-        "type": "Espresso",
-        "sugar": 10
-      },
-      {
-        "type": "Americano",
-        "sugar": 8
-      }
+      {"type": "Espresso", "sugar": 10},
+      {"type": "Americano", "sugar": 8}
     ],
     "total": 4.5,
-    "date": "2023-05-06T22:07:51.599183433Z"
+    "date": "2023-05-06T22:07:51Z"
   }
 ```
 
@@ -115,14 +109,8 @@ Response:
   "order": {
     "id": "2",
     "coffees": [
-      {
-        "type": "Espresso",
-        "sugar": 10
-      },
-      {
-        "type": "Americano",
-        "sugar": 8
-      }
+      {"type": "Espresso", "sugar": 10},
+      {"type": "Americano", "sugar": 8}
     ],
     "total": 4.5,
     "date": "2023-05-06T22:07:51Z"
@@ -143,9 +131,7 @@ Response:
   {
     "id": "1",
     "coffees": [
-      {
-        "type": "Americano"
-      }
+      {"type": "Americano"}
     ],
     "total": 2.5,
     "date": "2023-05-05T23:25:13Z"
@@ -153,19 +139,66 @@ Response:
   {
     "id": "2",
     "coffees": [
-      {
-        "type": "Espresso",
-        "sugar": 10
-      },
-      {
-        "type": "Americano",
-        "sugar": 8
-      }
+      {"type": "Espresso", "sugar": 10},
+      {"type": "Americano", "sugar": 8}
     ],
     "total": 4.5,
     "date": "2023-05-06T22:07:51Z"
   }
 ]
+```
+
+### Update Order
+
+You can update order only if its status is not DELIVERED:
+```shell
+curl -X POST http://localhost:8080/order \
+    -H "Content-Type: application/json" \
+    -H 'token: NyBldmlsIGV4ZXM=' \
+    -d '{
+        "coffees": [
+          {"type": "Espresso", "sugar": 10},
+          {"type": "Americano", "sugar": 8}
+        ]
+    }'
+```
+Response:
+
+```json
+  "order": {
+    "id": "2",
+    "coffees": [
+      {"type": "Espresso", "sugar": 10},
+      {"type": "Americano", "sugar": 8}
+    ],
+    "total": 4.5,
+    "date": "2023-05-06T22:07:51Z"
+  }
+```
+
+### Delete Order
+
+To delete order:
+```shell
+curl -X POST http://localhost:8080/order \
+    -H "Content-Type: application/json" \
+    -H 'token: NyBldmlsIGV4ZXM=' \
+    -d '{
+        "id": 2
+    }'
+```
+Response:
+
+```json
+  "order": {
+    "id": "2",
+    "coffees": [
+      {"type": "Espresso", "sugar": 10},
+      {"type": "Americano", "sugar": 8}
+    ],
+    "total": 4.5,
+    "date": "2023-05-06T22:07:51Z"
+  }
 ```
 
 ## Users
@@ -188,7 +221,7 @@ Response:
 }
 ```
 
-#### Get other Users info
+### Get other Users info
 
 Also you can get information about other accounts by specifying their IDs:
 ```shell

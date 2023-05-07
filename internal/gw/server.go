@@ -3,6 +3,7 @@ package gw
 import (
 	ordersPB "coffeeshop/internal/orders/pb"
 	usersPB "coffeeshop/internal/users/pb"
+	"io/ioutil"
 	"strconv"
 
 	"log"
@@ -10,9 +11,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/runtime/protoiface"
 )
 
 const ( // TODO: move to config
@@ -83,14 +86,13 @@ func authToken(c *gin.Context) {
 }
 
 func marshalMW(req proto.Message) gin.HandlerFunc {
-	u := &jsonpb.Unmarshaler{}
-	m := &jsonpb.Marshaler{}
+	m := &jsonpb.Marshaler{EnumsAsInts: false, EmitDefaults: true}
 	return func(c *gin.Context) {
-		req.Reset()
+		body, _ := ioutil.ReadAll(c.Request.Body)
 		// Unmarshal request
-		if err := u.Unmarshal(c.Request.Body, req); err != nil {
+		if err := protojson.Unmarshal(body, req); err != nil {
 			// Check token
-			if _, ok := c.Get("token"); !ok || err.Error() != "EOF" {
+			if _, ok := c.Get("token"); !ok {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Error in your request"})
 				return
 			}
@@ -103,7 +105,8 @@ func marshalMW(req proto.Message) gin.HandlerFunc {
 			return
 		}
 		// Send a response
-		if err := m.Marshal(c.Writer, c.MustGet("resp").(proto.Message)); err != nil {
+		log.Print(c.MustGet("resp").(protoiface.MessageV1).String())
+		if err := m.Marshal(c.Writer, c.MustGet("resp").(protoiface.MessageV1)); err != nil {
 			log.Print(err)
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Error sending response"})
 		}
