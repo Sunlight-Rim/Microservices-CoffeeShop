@@ -8,7 +8,7 @@ You can register, login, order some coffee, view the history of your coffee orde
 
 ## Structure
 Application architecture:
-![map](https://i.ibb.co/mT5MvWY/schema.jpg)
+![map](https://i.imgur.com/W2czLNS.jpg)
 
 There are Orders and Users services that realizes CRUD operations. Both services are connected to each other via gRPC and are calling externally via REST through API Gateway. Endpoints and API methods you can see in [Documentation](/docs/documentation.md) \
 The folders structure was inspired by [Standard Go Project Layout](https://github.com/golang-standards/project-layout) and persist in each service. Here are:
