@@ -2,23 +2,25 @@
 
 - [Endpoints](#endpoints)
 - [Auth](#auth)
-- [Orders](#orders)
 - [Users](#users)
+- [Orders](#orders)
+- [DBSchema](#db-schema)
 
 ## Endpoints
-| URL          | Description                                   | Method   | Data                                 |
-|--------------|-----------------------------------------------|----------|--------------------------------------|
-| /user/signup | Register user                                 | `POST`   | username<br> password<br> address    |
-| /user/login  | Login user                                    | `POST`   | username<br> password                |
-| /user        | View info of your account                     | `GET`    |                                      |
-| /user        | View info of users with ID specified in Data  | `GET`    | ids                                  |
-| /user        | Change some info of your account              | `PATCH`  | username<br> password<br> address    |
-| /user        | Delete your account                           | `DELETE` |                                      |
-| /order       | Create new order                              | `POST`   | (token in header)<br> type<br> sugar |
-| /order       | View all your orders                          | `GET`    |                                      |
-| /order/1     | View your certain order                       | `GET`    |                                      |
-| /order/1     | Update your order if it hasn't been delivered | `PATCH`  | (token in header)<br> type<br> sugar |
-| /order/1     | Delete your certain order                     | `DELETE` |                                      |
+| URL            | Method   | Request Body                      | Request header | Response Body                                           | Description                                                           |
+|----------------|----------|-----------------------------------|----------------|---------------------------------------------------------|-----------------------------------------------------------------------|
+| /auth/signup   | `POST`   | username<br> address<br> password |                | id<br> username<br> address<br> regdate                 | Register user                                                         |
+| /auth/login    | `POST`   | username<br> password             |                | accessToken<br> refreshToken                            | Login user and get pair of tokens                                     |
+| /auth/refresh  | `POST`   | refreshToken                      |                | accessToken                                             | Refresh access token                                                  |
+| /user          | `GET`    |                                   | accessToken    | id<br> username<br> address<br> regdate<br> ordersCount | View data of your account                                             |
+| /user/1        | `GET`    |                                   | accessToken    | id<br> username<br> address<br> regdate<br> ordersCount | View data of user with id=1                                           |
+| /user          | `PATCH`  | username<br> address<br> password | accessToken    | id<br> username<br> address<br> regdate<br> ordersCount | Change some info of your account                                      |
+| /user          | `DELETE` |                                   | accessToken    | id<br> username<br> address<br> regdate<br> ordersCount | Delete your account                                                   |
+| /order         | `POST`   | [type<br> sugar]<br> ...          | accessToken    | id<br> status<br> date<br> coffees<br> total            | Create new order with specified coffees                               |
+| /order/1       | `GET`    |                                   | accessToken    | id<br> status<br> date<br> coffees<br> total            | View your certain order                                               |
+| /order?shift=0 | `GET`    |                                   | accessToken    | [id<br> status<br> date<br> coffees<br> total]<br> ...  | View some your orders. Returns 6 orders<br> starting from the "shift" |
+| /order/1       | `PATCH`  | [type<br> sugar]<br> ...          | accessToken    | id<br> status<br> date<br> coffees<br> total            | Update your order (if order status hasn't been "DELIVERED")           |
+| /order/1       | `DELETE` |                                   | accessToken    | id<br> status<br> date<br> coffees<br> total            | Delete your certain order                                             |
 
 ## Auth
 
@@ -27,7 +29,7 @@
 Firslty, you need to register a new user via sending POST request
 to /user/signup with `username`, `password` and `address` in data:
 ```shell
-curl -X POST http://localhost:8080/user/signup \
+curl -X POST http://localhost:8080/auth/signup \
     -H 'Accept: application/json' \
     -d '{
         "username": "ScottPilgrim",
@@ -50,7 +52,7 @@ Response:
 Then you need to login in just created account by sending POST
 to /user/login with `username` and `password`:
 ```shell
-curl -X POST http://localhost:8080/user/login \
+curl -X POST http://localhost:8080/auth/login \
     -H 'Accept: application/json' \
     -d '{
         "username": "ScottPilgrim",
@@ -59,12 +61,31 @@ curl -X POST http://localhost:8080/user/login \
 ```
 Response:
 ```json
-"id":    1,
-"token": "NyBldmlsIGV4ZXM="
+"accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU2NvdHRQaWxncmltIiwiZXhwIjoxNTA1NDY3NzU2ODY1fQ.wpkdbdIxRO0b7TKZwxVBVe7DkL7VwrKvOXF4R3q3zlw",
+"refreshToken": "V2UgYXJlIFNleCBCb2ItT21i"
 ```
 
-Now, you can use recieved token in your orders and users requests.
-The token is regenerated after you change your password.
+Now, you can use recieved accessToken in your orders and users requests. Remember that the lifetime of accessToken is short.
+
+P.S.: In accessToken payload only contains "id" and "exp".
+
+### Refresh
+
+#TODO
+
+If accessToken is expired you need to refresh it by using refreshToken:
+```shell
+curl -X POST http://localhost:8080/auth/refresh \
+    -H 'Accept: application/json' \
+    -d '{
+        "refreshToken": "V2UgYXJlIFNleCBCb2ItT21i"
+    }'
+```
+Response:
+```json
+"accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU2NvdHRQaWxncmltIiwiZXhwIjoxNTA1NDY3NzU3MjM1fQ.p0O1pkRCwD3N6i8v9DDgM_9OQ383647n_VioByMDCLg",
+"refreshToken": "SSBoYXZlIHRvIGdvIHBlZS4="
+```
 
 ## Orders
 
@@ -74,7 +95,7 @@ You can order one coffee:
 ```shell
 curl -X POST http://localhost:8080/order \
     -H "Content-Type: application/json" \
-    -H 'token: NyBldmlsIGV4ZXM=' \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU2NvdHRQaWxncmltIiwiZXhwIjoxNTA1NDY3NzU3MjM1fQ.p0O1pkRCwD3N6i8v9DDgM_9OQ383647n_VioByMDCLg" \
     -d '{
         "coffees": [
           {"type": "Espresso", "sugar": 10},
@@ -102,7 +123,7 @@ For getting one, just send:
 ```shell
 curl -X GET http://localhost:8080/order/2 \
     -H "Content-Type: application/json" \
-    -H 'token: yBldmlsIGV4ZXM='
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU2NvdHRQaWxncmltIiwiZXhwIjoxNTA1NDY3NzU3MjM1fQ.p0O1pkRCwD3N6i8v9DDgM_9OQ383647n_VioByMDCLg" \
 ```
 Response:
 ```json
@@ -117,13 +138,13 @@ Response:
   }
 ```
 
-### Get all Orders
+### Get some Orders
 
-Get all orders:
+Get some orders:
 ```shell
-curl -X GET http://localhost:8080/order \
+curl -X GET http://localhost:8080/order?shift=0 \
     -H "Content-Type: application/json" \
-    -H 'token: yBldmlsIGV4ZXM='
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU2NvdHRQaWxncmltIiwiZXhwIjoxNTA1NDY3NzU3MjM1fQ.p0O1pkRCwD3N6i8v9DDgM_9OQ383647n_VioByMDCLg" \
 ```
 Response:
 ```json
@@ -154,7 +175,7 @@ You can update order only if its status is not DELIVERED:
 ```shell
 curl -X POST http://localhost:8080/order \
     -H "Content-Type: application/json" \
-    -H 'token: NyBldmlsIGV4ZXM=' \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU2NvdHRQaWxncmltIiwiZXhwIjoxNTA1NDY3NzU3MjM1fQ.p0O1pkRCwD3N6i8v9DDgM_9OQ383647n_VioByMDCLg" \
     -d '{
         "coffees": [
           {"type": "Espresso", "sugar": 10},
@@ -182,7 +203,7 @@ To delete order:
 ```shell
 curl -X POST http://localhost:8080/order \
     -H "Content-Type: application/json" \
-    -H 'token: NyBldmlsIGV4ZXM=' \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU2NvdHRQaWxncmltIiwiZXhwIjoxNTA1NDY3NzU3MjM1fQ.p0O1pkRCwD3N6i8v9DDgM_9OQ383647n_VioByMDCLg" \
     -d '{
         "id": 2
     }'
@@ -203,13 +224,15 @@ Response:
 
 ## Users
 
+#TODO
+
 ### Get your Account info
 
 You can get information about your account:
 ```shell
 curl -X GET http://localhost:8080/user \
     -H 'Accept: application/json' \
-    -H 'token: NyBldmlsIGV4ZXM='
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU2NvdHRQaWxncmltIiwiZXhwIjoxNTA1NDY3NzU3MjM1fQ.p0O1pkRCwD3N6i8v9DDgM_9OQ383647n_VioByMDCLg" \
 ```
 Response:
 ```json
@@ -223,24 +246,15 @@ Response:
 
 ### Get other Users info
 
-Also you can get information about other accounts by specifying their IDs:
+Also you can get information about other account by specifying their IDs:
 ```shell
-curl -X GET http://localhost:8080/user \
+curl -X GET http://localhost:8080/user/2 \
     -H 'Accept: application/json' \
-    -H 'token:  NyBldmlsIGV4ZXM=' \
-    -d '{
-        "ids": [1, 2]
-    }'
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU2NvdHRQaWxncmltIiwiZXhwIjoxNTA1NDY3NzU3MjM1fQ.p0O1pkRCwD3N6i8v9DDgM_9OQ383647n_VioByMDCLg" \
 ```
 Response:
 ```json
-"users": [
-  {
-    "id": "1",
-    "username": "ScottPilgrim",
-    "address": "65 Alberta Ave, Regal Heights, Toronto",
-    "regdate": "2023-04-30T18:47:35Z"
-  },
+"user": [
   {
     "id": "2",
     "username": "WallaceWells",
@@ -256,7 +270,7 @@ You can update some information of your account:
 ```shell
 curl -X PATCH http://localhost:8080/user \
     -H 'Accept: application/json' \
-    -H 'token:  NyBldmlsIGV4ZXM=' \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU2NvdHRQaWxncmltIiwiZXhwIjoxNTA1NDY3NzU3MjM1fQ.p0O1pkRCwD3N6i8v9DDgM_9OQ383647n_VioByMDCLg" \
     -d '{
         "user": {
             "username": "Scott"
@@ -281,7 +295,7 @@ To delete an account, you can use the DELETE method:
 ```shell
 curl -X DELETE http://localhost:8080/user \
     -H 'Accept: application/json' \
-    -H 'token:  NyBldmlsIGV4ZXM='
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU2NvdHRQaWxncmltIiwiZXhwIjoxNTA1NDY3NzU3MjM1fQ.p0O1pkRCwD3N6i8v9DDgM_9OQ383647n_VioByMDCLg"
 ```
 Response:
 ```json
@@ -294,3 +308,7 @@ Response:
   }
 ]
 ```
+
+## DB Schema
+
+![schema](https://i.imgur.com/u3WRbz9.png)

@@ -3,16 +3,49 @@ syntax = "proto3";
 package orders;
 
 import "google/protobuf/timestamp.proto";
+import "internal/orders/proto/annotations.proto";
+// import "internal/orders/proto/options.annotations.proto";
 
 option go_package = ".;orders_pb";
 
 
 service OrdersService {
-    rpc Create (CreateOrderRequest) returns (CreateOrderResponse);
-    rpc Get (GetOrderRequest) returns (GetOrderResponse);
-    rpc List (ListOrderRequest) returns (ListOrderResponse);
-    rpc Update (UpdateOrderRequest) returns (UpdateOrderResponse);
-    rpc Delete (DeleteOrderRequest) returns (DeleteOrderResponse);
+    rpc Create (CreateOrderRequest) returns (CreateOrderResponse) {
+        option (google.api.http) = {
+            post: "/"
+            body: "coffees"
+        };
+        // option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+        //     parameters: {
+        //         headers: {
+        //             name: "Authorization";
+        //             type: STRING,
+        //             required: true;
+        //         };
+        //     };
+        // };
+    };
+    rpc Get (GetOrderRequest) returns (GetOrderResponse) {
+        option (google.api.http) = {
+            get: "/{id}"
+        };
+    };
+    rpc List (ListOrderRequest) returns (ListOrderResponse) {
+        option (google.api.http) = {
+            get: "/"
+        };
+    };
+    rpc Update (UpdateOrderRequest) returns (UpdateOrderResponse) {
+        option (google.api.http) = {
+            patch: "/{id}"
+            body: "*"
+        };
+    };
+    rpc Delete (DeleteOrderRequest) returns (DeleteOrderResponse) {
+        option (google.api.http) = {
+            delete: "/{id}"
+        };
+    };
 }
 
 message Coffee {
@@ -26,16 +59,17 @@ message Order {
         DELIVERED = 1;
     }
     int64 id = 1;
-    repeated Coffee coffees = 2;
-    float total = 3;
+    int64 userid = 2;
+    Status status = 3;
     google.protobuf.Timestamp date = 4;
-    Status status = 5;
+    repeated Coffee coffees = 5;
+    float total = 6;
 }
 
 // Create
 
 message CreateOrderRequest {
-    string token = 1;
+    int64 userid = 1;
     repeated Coffee coffees = 2;
 }
 
@@ -46,7 +80,7 @@ message CreateOrderResponse {
 // Get
 
 message GetOrderRequest {
-    string token = 1;
+    int64 userid = 1;
     int64 id = 2;
 }
 
@@ -54,11 +88,11 @@ message GetOrderResponse {
     Order order = 1;
 }
 
-
 // List
 
 message ListOrderRequest {
-    string token = 1;
+    int64 userid = 1;
+    int32 shift = 2;
 }
 
 message ListOrderResponse {
@@ -68,7 +102,7 @@ message ListOrderResponse {
 // Update
 
 message UpdateOrderRequest {
-    string token = 1;
+    int64 userid = 1;
     int64 id = 2;
     repeated Coffee coffees = 3;
 }
@@ -80,7 +114,7 @@ message UpdateOrderResponse {
 // Delete
 
 message DeleteOrderRequest {
-    string token = 1;
+    int64 userid = 1;
     int64 id = 2;
 }
 

@@ -10,12 +10,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang/protobuf/jsonpb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/runtime/protoiface"
 )
 
 const ( // TODO: move to config
@@ -86,11 +84,13 @@ func authToken(c *gin.Context) {
 }
 
 func marshalMW(req proto.Message) gin.HandlerFunc {
-	m := &jsonpb.Marshaler{EnumsAsInts: false, EmitDefaults: true}
+	m := &protojson.MarshalOptions{EmitUnpopulated: true}
+	u := &protojson.UnmarshalOptions{AllowPartial: true}
+	// m := &jsonpb.Marshaler{EnumsAsInts: false, EmitDefaults: true}
 	return func(c *gin.Context) {
 		body, _ := ioutil.ReadAll(c.Request.Body)
 		// Unmarshal request
-		if err := protojson.Unmarshal(body, req); err != nil {
+		if err := u.Unmarshal(body, req); err != nil {
 			// Check token
 			if _, ok := c.Get("token"); !ok {
 				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Error in your request"})
@@ -105,11 +105,12 @@ func marshalMW(req proto.Message) gin.HandlerFunc {
 			return
 		}
 		// Send a response
-		log.Print(c.MustGet("resp").(protoiface.MessageV1).String())
-		if err := m.Marshal(c.Writer, c.MustGet("resp").(protoiface.MessageV1)); err != nil {
+		res, err := m.Marshal(c.MustGet("resp").(proto.Message))
+		if err != nil {
 			log.Print(err)
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Error sending response"})
 		}
+		c.Data(http.StatusOK, "application/json", res)
 	}
 }
 
@@ -136,7 +137,8 @@ func (g GatewayServer) listUser(c *gin.Context) {
 		return
 	}
 	var reqGet usersPB.GetUserRequest
-	jsonpb.Unmarshal(c.Request.Body, &reqGet)
+	body, _ := ioutil.ReadAll(c.Request.Body)
+	protojson.Unmarshal(body, &reqGet)
 	reqGet.Token = c.MustGet("token").(string)
 	resp, err := g.usersClient.Get(c.Request.Context(), &reqGet)
 	c.Set("err", err)

@@ -2,24 +2,39 @@ syntax = "proto3";
 
 package users;
 
-import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "internal/users/proto/annotations.proto";
 
 option go_package = ".;users_pb";
 
 
 service UsersService {
     rpc Create (CreateUserRequest) returns (CreateUserResponse);
-    rpc Login (LoginUserRequest) returns (LoginUserResponse);
-    rpc Get (GetUserRequest) returns (ListUserResponse);
-    rpc List (ListUserRequest) returns (ListUserResponse);
-    rpc Update (UpdateUserRequest) returns (UpdateUserResponse);
-    rpc Delete (DeleteUserRequest) returns (DeleteUserResponse);
+    rpc GetMe (GetUserRequest) returns (GetUserResponse) {
+        option (google.api.http) = {
+            get: "/"
+        };
+    };
+    rpc GetOther (GetOtherUserRequest) returns (GetOtherUserResponse) {
+        option (google.api.http) = {
+            get: "/{id}"
+        };
+    };
+    rpc Update (UpdateUserRequest) returns (UpdateUserResponse) {
+        option (google.api.http) = {
+            patch: "/"
+            body: "*"
+        };
+    };
+    rpc Delete (DeleteUserRequest) returns (DeleteUserResponse) {
+        option (google.api.http) = {
+            delete: "/"
+        };
+    };
     // only for OrdersService interaction
-    rpc AuthUser (AuthUserRequest) returns (AuthUserResponse);
-    rpc GetUserOrders (GetUserOrdersRequest) returns (GetUserOrdersResponse);
-    rpc CreateUserOrder (CreateUserOrderRequest) returns (google.protobuf.Empty);
-    rpc DeleteUserOrder (DeleteUserOrderRequest) returns (google.protobuf.Empty);
+    rpc IncUserOrder (IncUserOrderRequest) returns (google.protobuf.Empty);
+    rpc DecUserOrder (DecUserOrderRequest) returns (google.protobuf.Empty);
 }
 
 message User {
@@ -27,8 +42,7 @@ message User {
     string username = 2;
     string address = 3;
     google.protobuf.Timestamp regdate = 4;
-    repeated int64 order_ids = 5;
-    // also have password and token in database
+    // also have password hash in database
 }
 
 // Create
@@ -43,39 +57,30 @@ message CreateUserResponse {
     User user = 1;
 }
 
-// Login
-
-message LoginUserRequest {
-    string username = 1;
-    string password = 2;
-}
-
-message LoginUserResponse {
-    int64 id = 1;
-    string token = 2;
-}
-
-// Get
+// Get me
 
 message GetUserRequest {
-    string token = 1;
+    int64 id = 1;
 }
 
-// List
-
-message ListUserRequest {
-    string token = 1;
-    repeated int64 ids = 2;
+message GetUserResponse {
+    User user = 1;
 }
 
-message ListUserResponse {
-    repeated User users = 1;
+// Get other user
+
+message GetOtherUserRequest {
+    int64 id = 1;
+}
+
+message GetOtherUserResponse {
+    User user = 1;
 }
 
 // Update
 
 message UpdateUserRequest {
-    string token = 1;
+    int64 id = 1;
     User user = 2;
 }
 
@@ -86,43 +91,21 @@ message UpdateUserResponse {
 // Delete
 
 message DeleteUserRequest {
-    string token = 1;
+    int64 id = 1;
 }
 
 message DeleteUserResponse {
     User user = 1;
 }
 
-// Auth user
+// Increment orders count
 
-message AuthUserRequest {
-    string token = 1;
-}
-
-message AuthUserResponse {
+message IncUserOrderRequest {
     int64 id = 1;
 }
 
-// Get list of orders of user
+// Decrement orders count
 
-message GetUserOrdersRequest {
+message DecUserOrderRequest {
     int64 id = 1;
-}
-
-message GetUserOrdersResponse{
-    repeated int64 order_ids = 2;
-}
-
-// Crete new order for user
-
-message CreateUserOrderRequest {
-    int64 id = 1;
-    int64 order_id = 2;
-}
-
-// Delete an order from user
-
-message DeleteUserOrderRequest {
-    int64 id = 1;
-    int64 order_id = 2;
 }

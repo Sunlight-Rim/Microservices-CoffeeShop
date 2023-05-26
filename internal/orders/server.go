@@ -39,13 +39,14 @@ func Start() {
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
+	// Connect to Users service
 	usersConn, err := grpc.Dial("localhost:"+usersPort, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("Didn't connect to gRPC: %v", err)
 	}
-	orderService := OrdersServiceServer{db: db, users: usersPB.NewUsersServiceClient(usersConn)}
 	// Start gRPC server
 	grpcServer := grpc.NewServer()
+	orderService := OrdersServiceServer{db: db, users: usersPB.NewUsersServiceClient(usersConn)}
 	pb.RegisterOrdersServiceServer(grpcServer, &orderService)
 	lis, err := net.Listen("tcp", "localhost:"+grpcPort)
 	if err != nil {
@@ -70,12 +71,7 @@ var coffeePrices = map[string]float32{
 func (s *OrdersServiceServer) Create(ctx context.Context, in *pb.CreateOrderRequest) (*pb.CreateOrderResponse, error) {
 	// Validate input
 	if len(in.GetCoffees()) == 0 {
-		return nil, errors.New("you didn't order any coffee")
-	}
-	// Check token
-	authUser, err := s.users.AuthUser(ctx, &usersPB.AuthUserRequest{Token: in.GetToken()})
-	if err != nil {
-		return nil, err
+		return nil, errors.New("you didn't specify any coffee")
 	}
 	// Create order
 	date := time.Now()
@@ -92,16 +88,16 @@ func (s *OrdersServiceServer) Create(ctx context.Context, in *pb.CreateOrderRequ
 		order.Total += price
 	}
 	coffees, _ := json.Marshal(in.GetCoffees())
-	res, err := s.db.Exec("INSERT INTO orders (coffees, total, date, status) VALUES ($1, $2, $3, $4)",
-						  string(coffees), &order.Total, date.Format(time.RFC3339), 0)
+	// Append to DB
+	res, err := s.db.Exec("INSERT INTO orders (userid, coffees, total, date, status) VALUES ($1, $2, $3, $4, $5)",
+						  in.GetUserid(), string(coffees), &order.Total, date.Format(time.RFC3339), 0)
 	if err != nil {
 		log.Printf("DB request error: %v", err)
 		return nil, errors.New("there is some problem with DB")
 	}
 	order.Id, _ = res.LastInsertId()
-	// Add order to users table in DB
-	if _, err := s.users.CreateUserOrder(ctx, &usersPB.CreateUserOrderRequest{
-		Id: authUser.Id, OrderId: order.Id}); err != nil {
+	// Update order count in Users DB
+	if _, err := s.users.IncUserOrder(ctx, &usersPB.IncUserOrderRequest{Id: in.GetUserid()}); err != nil {
 		return nil, err
 	}
 	return &pb.CreateOrderResponse{Order: &order}, nil
@@ -118,13 +114,15 @@ func (s *OrdersServiceServer) Get(ctx context.Context, in *pb.GetOrderRequest) (
 		return nil, err
 	}
 	// Fill response order data
-	var ( order   pb.Order
-		  coffees string
-		  date    time.Time )
+	var (
+		order   pb.Order
+		coffees string
+		date    time.Time
+	)
 	for _, id := range userOrders.OrderIds {
 		if id == in.GetId() {
 			s.db.QueryRow("SELECT id, coffees, date, total, status FROM orders WHERE id == $1", id).Scan(
-						  &order.Id, &coffees, &date, &order.Total, &order.Status)
+				&order.Id, &coffees, &date, &order.Total, &order.Status)
 			break
 		}
 	}
@@ -147,11 +145,13 @@ func (s *OrdersServiceServer) List(ctx context.Context, in *pb.ListOrderRequest)
 		return nil, err
 	}
 	// Get all orders from user
-	var ( orders  []*pb.Order
-		  coffees string
-		  date    time.Time )
+	var (
+		orders  []*pb.Order
+		coffees string
+		date    time.Time
+	)
 	ids := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(userOrders.OrderIds)), ","), "[]")
-	rows, err := s.db.Query("SELECT id, coffees, date, total, status FROM orders WHERE id IN ("+ids+")")
+	rows, err := s.db.Query("SELECT id, coffees, date, total, status FROM orders WHERE id IN (" + ids + ")")
 	if err != nil {
 		log.Printf("DB request error: %v", err)
 		return nil, errors.New("there is some problem with DB")
