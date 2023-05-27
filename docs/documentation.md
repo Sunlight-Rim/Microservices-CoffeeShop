@@ -7,20 +7,20 @@
 - [DBSchema](#db-schema)
 
 ## Endpoints
-| URL            | Method   | Request Body                      | Request header | Response Body                                           | Description                                                           |
-|----------------|----------|-----------------------------------|----------------|---------------------------------------------------------|-----------------------------------------------------------------------|
-| /auth/signup   | `POST`   | username<br> address<br> password |                | id<br> username<br> address<br> regdate                 | Register user                                                         |
-| /auth/login    | `POST`   | username<br> password             |                | accessToken<br> refreshToken                            | Login user and get pair of tokens                                     |
-| /auth/refresh  | `POST`   | refreshToken                      |                | accessToken                                             | Refresh access token                                                  |
-| /user          | `GET`    |                                   | accessToken    | id<br> username<br> address<br> regdate<br> ordersCount | View data of your account                                             |
-| /user/1        | `GET`    |                                   | accessToken    | id<br> username<br> address<br> regdate<br> ordersCount | View data of user with id=1                                           |
-| /user          | `PATCH`  | username<br> address<br> password | accessToken    | id<br> username<br> address<br> regdate<br> ordersCount | Change some info of your account                                      |
-| /user          | `DELETE` |                                   | accessToken    | id<br> username<br> address<br> regdate<br> ordersCount | Delete your account                                                   |
-| /order         | `POST`   | [type<br> sugar]<br> ...          | accessToken    | id<br> status<br> date<br> coffees<br> total            | Create new order with specified coffees                               |
-| /order/1       | `GET`    |                                   | accessToken    | id<br> status<br> date<br> coffees<br> total            | View your certain order                                               |
-| /order?shift=0 | `GET`    |                                   | accessToken    | [id<br> status<br> date<br> coffees<br> total]<br> ...  | View some your orders. Returns 6 orders<br> starting from the "shift" |
-| /order/1       | `PATCH`  | [type<br> sugar]<br> ...          | accessToken    | id<br> status<br> date<br> coffees<br> total            | Update your order (if order status hasn't been "DELIVERED")           |
-| /order/1       | `DELETE` |                                   | accessToken    | id<br> status<br> date<br> coffees<br> total            | Delete your certain order                                             |
+| URL            | Method   | Request Body                      | Request header | Response Body                                          | Description                                                           |
+|----------------|----------|-----------------------------------|----------------|--------------------------------------------------------|-----------------------------------------------------------------------|
+| /auth/signup   | `POST`   | username<br> address<br> password |                | id<br> username<br> address<br> regdate                | Register user                                                         |
+| /auth/login    | `POST`   | username<br> password             |                | accessToken<br> refreshToken                           | Login user and get pair of tokens                                     |
+| /auth/refresh  | `POST`   | refreshToken                      |                | accessToken                                            | Refresh access token                                                  |
+| /user          | `GET`    |                                   | accessToken    | id<br> username<br> address<br> regdate                | View data of your account                                             |
+| /user/1        | `GET`    |                                   | accessToken    | id<br> username<br> address<br> regdate                | View data of user with id=1                                           |
+| /user          | `PATCH`  | username<br> address<br> password | accessToken    | id<br> username<br> address<br> regdate                | Change some info of your account                                      |
+| /user          | `DELETE` |                                   | accessToken    | id<br> username<br> address<br> regdate                | Delete your account                                                   |
+| /order         | `POSR`   | [type<br> sugar]<br> ...          | accessToken    | id<br> status<br> date<br> coffees<br> total           | Create new order with specified coffees                               |
+| /order/1       | `GET`    |                                   | accessToken    | id<br> status<br> date<br> coffees<br> total           | View your certain order                                               |
+| /order?shift=0 | `GET`    |                                   | accessToken    | [id<br> status<br> date<br> coffees<br> total]<br> ... | View some your orders. Returns 6 orders<br> starting from the "shift" |
+| /order/1       | `PATCH`  | [type<br> sugar]<br> ...          | accessToken    | id<br> status<br> date<br> coffees<br> total           | Update your order (if order status hasn't been "DELIVERED")           |
+| /order/1       | `DELETE` |                                   | accessToken    | id<br> status<br> date<br> coffees<br> total           | Delete your certain order                                             |
 
 ## Auth
 

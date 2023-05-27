@@ -25,7 +25,7 @@ type UsersServiceServer struct {
 
 func Start() {
 	// Connect to DB
-	db, err := sql.Open("sqlite3", "internal/users/users.db")
+	db, err := sql.Open("sqlite3", "internal/users/database/users.db")
 	if err != nil {
 		log.Fatalf("%v", err)
 	}

@@ -38,7 +38,10 @@ func Start() {
 	}
 	// Handlers
 	router := gin.Default()
-	router.Any("/*any", gin.WrapF(ordersMux.ServeHTTP), gin.WrapF(usersMux.ServeHTTP))
+	router.Any("/*any",
+		gin.WrapF(ordersMux.ServeHTTP),
+		gin.WrapF(usersMux.ServeHTTP),
+	)
 	// Start server
 	if err := router.Run(":"+restPort); err != nil {
         log.Fatal(err)
