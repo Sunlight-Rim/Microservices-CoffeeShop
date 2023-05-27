@@ -1,7 +1,7 @@
 package main
 
 import (
-	"coffeeshop/internal/gw"
+	gw "coffeeshop/internal/api-gw"
 	"coffeeshop/internal/orders"
 	"coffeeshop/internal/users"
 )

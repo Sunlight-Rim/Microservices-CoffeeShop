@@ -6,8 +6,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"strings"
 	"time"
 
 	"context"
@@ -25,7 +23,7 @@ const ( // TODO: move to config
 	usersPort = "50052"
 )
 
-/// SERVER DEFINITION
+/// gRPC SERVER
 
 type OrdersServiceServer struct {
 	pb.UnimplementedOrdersServiceServer
@@ -39,6 +37,7 @@ func Start() {
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
+	defer db.Close()
 	// Connect to Users service
 	usersConn, err := grpc.Dial("localhost:"+usersPort, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -57,7 +56,6 @@ func Start() {
 		if err := grpcServer.Serve(lis); err != nil {
 			log.Fatalf("Failed to start gRPC server: %v", err)
 		}
-		defer orderService.db.Close()
 	}()
 }
 
@@ -104,27 +102,16 @@ func (s *OrdersServiceServer) Create(ctx context.Context, in *pb.CreateOrderRequ
 }
 
 func (s *OrdersServiceServer) Get(ctx context.Context, in *pb.GetOrderRequest) (*pb.GetOrderResponse, error) {
-	// Check token
-	authUser, err := s.users.AuthUser(ctx, &usersPB.AuthUserRequest{Token: in.GetToken()})
-	if err != nil {
-		return nil, err
-	}
-	userOrders, err := s.users.GetUserOrders(ctx, &usersPB.GetUserOrdersRequest{Id: authUser.Id})
-	if err != nil {
-		return nil, err
-	}
-	// Fill response order data
+	log.Printf("yow! %v", in.GetId())
 	var (
 		order   pb.Order
 		coffees string
 		date    time.Time
 	)
-	for _, id := range userOrders.OrderIds {
-		if id == in.GetId() {
-			s.db.QueryRow("SELECT id, coffees, date, total, status FROM orders WHERE id == $1", id).Scan(
-				&order.Id, &coffees, &date, &order.Total, &order.Status)
-			break
-		}
+	if err := s.db.QueryRow("SELECT id, userid, coffees, date, total, status FROM orders WHERE id == $1 AND userid == $2",
+							in.GetId(), in.GetUserid()).Scan(&order.Id, &order.Userid, &coffees, &date, &order.Total, &order.Status);
+	err != nil {
+		return nil, err
 	}
 	if order.Id == 0 {
 		return nil, errors.New("order not found")
@@ -135,28 +122,18 @@ func (s *OrdersServiceServer) Get(ctx context.Context, in *pb.GetOrderRequest) (
 }
 
 func (s *OrdersServiceServer) List(ctx context.Context, in *pb.ListOrderRequest) (*pb.ListOrderResponse, error) {
-	// Check token
-	authUser, err := s.users.AuthUser(ctx, &usersPB.AuthUserRequest{Token: in.GetToken()})
-	if err != nil {
-		return nil, err
-	}
-	userOrders, err := s.users.GetUserOrders(ctx, &usersPB.GetUserOrdersRequest{Id: authUser.Id})
-	if err != nil {
-		return nil, err
-	}
-	// Get all orders from user
-	var (
-		orders  []*pb.Order
-		coffees string
-		date    time.Time
-	)
-	ids := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(userOrders.OrderIds)), ","), "[]")
-	rows, err := s.db.Query("SELECT id, coffees, date, total, status FROM orders WHERE id IN (" + ids + ")")
+	rows, err := s.db.Query("SELECT id, userid, coffees, date, total, status FROM orders WHERE id > $1 AND userid == $2",
+							in.GetShift(), in.GetUserid())
 	if err != nil {
 		log.Printf("DB request error: %v", err)
 		return nil, errors.New("there is some problem with DB")
 	}
 	defer rows.Close()
+	var (
+		orders  []*pb.Order
+		coffees string
+		date    time.Time
+	)
 	for rows.Next() {
 		order := pb.Order{}
 		rows.Scan(&order.Id, &coffees, &date, &order.Total, &order.Status)
@@ -164,6 +141,5 @@ func (s *OrdersServiceServer) List(ctx context.Context, in *pb.ListOrderRequest)
 		json.Unmarshal([]byte(coffees), &order.Coffees)
 		orders = append(orders, &order)
 	}
-	// Recieve data from DataBase
 	return &pb.ListOrderResponse{Orders: orders}, nil
 }

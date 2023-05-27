@@ -13,23 +13,23 @@ service UsersService {
     rpc Create (CreateUserRequest) returns (CreateUserResponse);
     rpc GetMe (GetUserRequest) returns (GetUserResponse) {
         option (google.api.http) = {
-            get: "/"
+            get: "/users"
         };
     };
     rpc GetOther (GetOtherUserRequest) returns (GetOtherUserResponse) {
         option (google.api.http) = {
-            get: "/{id}"
+            get: "/users/{id}"
         };
     };
     rpc Update (UpdateUserRequest) returns (UpdateUserResponse) {
         option (google.api.http) = {
-            patch: "/"
+            patch: "/users"
             body: "*"
         };
     };
     rpc Delete (DeleteUserRequest) returns (DeleteUserResponse) {
         option (google.api.http) = {
-            delete: "/"
+            delete: "/users"
         };
     };
     // only for OrdersService interaction

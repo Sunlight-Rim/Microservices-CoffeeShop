@@ -123,7 +123,7 @@ For getting one, just send:
 ```shell
 curl -X GET http://localhost:8080/order/2 \
     -H "Content-Type: application/json" \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU2NvdHRQaWxncmltIiwiZXhwIjoxNTA1NDY3NzU3MjM1fQ.p0O1pkRCwD3N6i8v9DDgM_9OQ383647n_VioByMDCLg" \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU2NvdHRQaWxncmltIiwiZXhwIjoxNTA1NDY3NzU3MjM1fQ.p0O1pkRCwD3N6i8v9DDgM_9OQ383647n_VioByMDCLg"
 ```
 Response:
 ```json

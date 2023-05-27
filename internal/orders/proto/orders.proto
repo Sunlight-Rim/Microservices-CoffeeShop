@@ -12,7 +12,7 @@ option go_package = ".;orders_pb";
 service OrdersService {
     rpc Create (CreateOrderRequest) returns (CreateOrderResponse) {
         option (google.api.http) = {
-            post: "/"
+            post: "/orders"
             body: "coffees"
         };
         // option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -27,23 +27,23 @@ service OrdersService {
     };
     rpc Get (GetOrderRequest) returns (GetOrderResponse) {
         option (google.api.http) = {
-            get: "/{id}"
+            get: "/orders/{id}"
         };
     };
     rpc List (ListOrderRequest) returns (ListOrderResponse) {
         option (google.api.http) = {
-            get: "/"
+            get: "/orders"
         };
     };
     rpc Update (UpdateOrderRequest) returns (UpdateOrderResponse) {
         option (google.api.http) = {
-            patch: "/{id}"
+            patch: "/orders/{id}"
             body: "*"
         };
     };
     rpc Delete (DeleteOrderRequest) returns (DeleteOrderResponse) {
         option (google.api.http) = {
-            delete: "/{id}"
+            delete: "/orders/{id}"
         };
     };
 }
