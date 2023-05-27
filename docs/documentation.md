@@ -61,7 +61,7 @@ curl -X POST http://localhost:8080/auth/login \
 ```
 Response:
 ```json
-"accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU2NvdHRQaWxncmltIiwiZXhwIjoxNTA1NDY3NzU2ODY1fQ.wpkdbdIxRO0b7TKZwxVBVe7DkL7VwrKvOXF4R3q3zlw",
+"accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZXhwIjoxNTE2MjM5MDIyfQ.s_miVYCHBD3ZEFbfwOsdtrMsVtU7JM-ByB_ecLM8LrQ",
 "refreshToken": "V2UgYXJlIFNleCBCb2ItT21i"
 ```
 
@@ -83,7 +83,7 @@ curl -X POST http://localhost:8080/auth/refresh \
 ```
 Response:
 ```json
-"accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU2NvdHRQaWxncmltIiwiZXhwIjoxNTA1NDY3NzU3MjM1fQ.p0O1pkRCwD3N6i8v9DDgM_9OQ383647n_VioByMDCLg",
+"accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZXhwIjoxNTE2MjM5MDIyfQ.s_miVYCHBD3ZEFbfwOsdtrMsVtU7JM-ByB_ecLM8LrQ",
 "refreshToken": "SSBoYXZlIHRvIGdvIHBlZS4="
 ```
 
@@ -95,7 +95,7 @@ You can order one coffee:
 ```shell
 curl -X POST http://localhost:8080/order \
     -H "Content-Type: application/json" \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU2NvdHRQaWxncmltIiwiZXhwIjoxNTA1NDY3NzU3MjM1fQ.p0O1pkRCwD3N6i8v9DDgM_9OQ383647n_VioByMDCLg" \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZXhwIjoxNTE2MjM5MDIyfQ.s_miVYCHBD3ZEFbfwOsdtrMsVtU7JM-ByB_ecLM8LrQ" \
     -d '{
         "coffees": [
           {"type": "Espresso", "sugar": 10},
@@ -123,7 +123,7 @@ For getting one, just send:
 ```shell
 curl -X GET http://localhost:8080/order/2 \
     -H "Content-Type: application/json" \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU2NvdHRQaWxncmltIiwiZXhwIjoxNTA1NDY3NzU3MjM1fQ.p0O1pkRCwD3N6i8v9DDgM_9OQ383647n_VioByMDCLg"
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZXhwIjoxNTE2MjM5MDIyfQ.s_miVYCHBD3ZEFbfwOsdtrMsVtU7JM-ByB_ecLM8LrQ"
 ```
 Response:
 ```json
@@ -144,7 +144,7 @@ Get some orders:
 ```shell
 curl -X GET http://localhost:8080/order?shift=0 \
     -H "Content-Type: application/json" \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU2NvdHRQaWxncmltIiwiZXhwIjoxNTA1NDY3NzU3MjM1fQ.p0O1pkRCwD3N6i8v9DDgM_9OQ383647n_VioByMDCLg" \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZXhwIjoxNTE2MjM5MDIyfQ.s_miVYCHBD3ZEFbfwOsdtrMsVtU7JM-ByB_ecLM8LrQ" \
 ```
 Response:
 ```json
@@ -175,7 +175,7 @@ You can update order only if its status is not DELIVERED:
 ```shell
 curl -X POST http://localhost:8080/order \
     -H "Content-Type: application/json" \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU2NvdHRQaWxncmltIiwiZXhwIjoxNTA1NDY3NzU3MjM1fQ.p0O1pkRCwD3N6i8v9DDgM_9OQ383647n_VioByMDCLg" \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZXhwIjoxNTE2MjM5MDIyfQ.s_miVYCHBD3ZEFbfwOsdtrMsVtU7JM-ByB_ecLM8LrQ" \
     -d '{
         "coffees": [
           {"type": "Espresso", "sugar": 10},
@@ -203,7 +203,7 @@ To delete order:
 ```shell
 curl -X POST http://localhost:8080/order \
     -H "Content-Type: application/json" \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU2NvdHRQaWxncmltIiwiZXhwIjoxNTA1NDY3NzU3MjM1fQ.p0O1pkRCwD3N6i8v9DDgM_9OQ383647n_VioByMDCLg" \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZXhwIjoxNTE2MjM5MDIyfQ.s_miVYCHBD3ZEFbfwOsdtrMsVtU7JM-ByB_ecLM8LrQ" \
     -d '{
         "id": 2
     }'
@@ -232,7 +232,7 @@ You can get information about your account:
 ```shell
 curl -X GET http://localhost:8080/user \
     -H 'Accept: application/json' \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU2NvdHRQaWxncmltIiwiZXhwIjoxNTA1NDY3NzU3MjM1fQ.p0O1pkRCwD3N6i8v9DDgM_9OQ383647n_VioByMDCLg" \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZXhwIjoxNTE2MjM5MDIyfQ.s_miVYCHBD3ZEFbfwOsdtrMsVtU7JM-ByB_ecLM8LrQ" \
 ```
 Response:
 ```json
@@ -250,7 +250,7 @@ Also you can get information about other account by specifying their IDs:
 ```shell
 curl -X GET http://localhost:8080/user/2 \
     -H 'Accept: application/json' \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU2NvdHRQaWxncmltIiwiZXhwIjoxNTA1NDY3NzU3MjM1fQ.p0O1pkRCwD3N6i8v9DDgM_9OQ383647n_VioByMDCLg" \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZXhwIjoxNTE2MjM5MDIyfQ.s_miVYCHBD3ZEFbfwOsdtrMsVtU7JM-ByB_ecLM8LrQ" \
 ```
 Response:
 ```json
@@ -270,7 +270,7 @@ You can update some information of your account:
 ```shell
 curl -X PATCH http://localhost:8080/user \
     -H 'Accept: application/json' \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU2NvdHRQaWxncmltIiwiZXhwIjoxNTA1NDY3NzU3MjM1fQ.p0O1pkRCwD3N6i8v9DDgM_9OQ383647n_VioByMDCLg" \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZXhwIjoxNTE2MjM5MDIyfQ.s_miVYCHBD3ZEFbfwOsdtrMsVtU7JM-ByB_ecLM8LrQ" \
     -d '{
         "user": {
             "username": "Scott"
@@ -295,7 +295,7 @@ To delete an account, you can use the DELETE method:
 ```shell
 curl -X DELETE http://localhost:8080/user \
     -H 'Accept: application/json' \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU2NvdHRQaWxncmltIiwiZXhwIjoxNTA1NDY3NzU3MjM1fQ.p0O1pkRCwD3N6i8v9DDgM_9OQ383647n_VioByMDCLg"
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZXhwIjoxNTE2MjM5MDIyfQ.s_miVYCHBD3ZEFbfwOsdtrMsVtU7JM-ByB_ecLM8LrQ"
 ```
 Response:
 ```json

@@ -29,10 +29,10 @@ func Start() {
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
-	defer db.Close()
 	// Start gRPC server
 	grpcServer := grpc.NewServer()
-	pb.RegisterOrdersServiceServer(grpcServer, &OrdersServiceServer{db: db})
+	ordersService := OrdersServiceServer{db: db}
+	pb.RegisterOrdersServiceServer(grpcServer, &ordersService)
 	lis, err := net.Listen("tcp", "localhost:"+grpcPort)
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
@@ -42,5 +42,6 @@ func Start() {
 		if err := grpcServer.Serve(lis); err != nil {
 			log.Fatalf("Failed to start gRPC server: %v", err)
 		}
+		defer db.Close()
 	}()
 }

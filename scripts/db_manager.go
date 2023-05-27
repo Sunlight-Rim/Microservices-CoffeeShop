@@ -18,9 +18,9 @@ const usersPath string = "internal/users/database/users.db"
 
 func ordersManage() error {
 	// Remove DataBase
-	// if err := os.Remove(ordersPath); err != nil {
-    //     return err
-    // }
+	if err := os.Remove(ordersPath); err != nil {
+        return err
+    }
 
 	// Create DataBase
 	file, err := os.Create(ordersPath)
@@ -39,7 +39,7 @@ func ordersManage() error {
 
 	// Create Tables
 	table := `CREATE TABLE orders (
-				ordersID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+				orderID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 				userID INTEGER NOT NULL,
 				status INTEGER,
 				date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -58,7 +58,7 @@ func ordersManage() error {
 					coffees,
 					total
 				) VALUES (?, ?, ?, ?);`
-	res, err := db.Exec(records, 1, 0, `["Type": "Espresso", "Sugar": 2]`, 2)
+	res, err := db.Exec(records, 1, 0, `[{"Type": "Espresso", "Sugar": 2}, {"Type": "Americano", "Sugar": 1}]`, 5.5)
 	if err != nil {
 		return err
 	}
@@ -69,9 +69,9 @@ func ordersManage() error {
 
 func usersManage() error {
 	// Remove DataBase
-	// if err := os.Remove(usersPath); err != nil {
-    //     return err
-    // }
+	if err := os.Remove(usersPath); err != nil {
+        return err
+    }
 
 	// Create DataBase
 	file, err := os.Create(usersPath)
@@ -90,7 +90,7 @@ func usersManage() error {
 
 	// Create Tables
 	table := `CREATE TABLE users (
-				usersID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+				userID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 				username TEXT NOT NULL,
 				address TEXT NOT NULL,
 				passwordHash TEXT NOT NULL,

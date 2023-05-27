@@ -3,11 +3,14 @@ package orders
 import (
 	pb "coffeeshop/internal/orders/pb"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"log"
+	"strings"
 	"time"
 
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -18,11 +21,27 @@ var coffeePrices = map[string]float32{
 	"Americano": 2.5,
 }
 
+func getUserID(ctx *context.Context) int {
+	// exception handling can be skipped here due to Auth() middleware
+	md, _ := metadata.FromIncomingContext(*ctx)
+	tokenPayload, _ := base64.StdEncoding.DecodeString(strings.Split(strings.Split(md["authorization"][0], " ")[1], ".")[1] + "==")
+	var payloadMap map[string]int
+	json.Unmarshal(tokenPayload, &payloadMap)
+	return payloadMap["id"]
+}
+
+// func Auth() gin.HandlerFunc {
+// 	return func(c *gin.Context) {
+		
+// 	}
+// }
+
 func (s *OrdersServiceServer) Create(ctx context.Context, in *pb.CreateOrderRequest) (*pb.CreateOrderResponse, error) {
 	// Validate input
 	if len(in.GetCoffees()) == 0 {
 		return nil, errors.New("you didn't specify any coffee")
 	}
+	userID := getUserID(&ctx)
 	// Create order
 	date := time.Now()
 	order := pb.Order{
@@ -40,7 +59,7 @@ func (s *OrdersServiceServer) Create(ctx context.Context, in *pb.CreateOrderRequ
 	coffees, _ := json.Marshal(in.GetCoffees())
 	// Append to DB
 	res, err := s.db.Exec("INSERT INTO orders (userid, coffees, total, date, status) VALUES ($1, $2, $3, $4, $5)",
-						  in.GetUserid(), string(coffees), &order.Total, date.Format(time.RFC3339), 0)
+						  userID, string(coffees), &order.Total, date.Format(time.RFC3339), 0)
 	if err != nil {
 		log.Printf("DB request error: %v", err)
 		return nil, errors.New("there is some problem with DB")
@@ -50,27 +69,32 @@ func (s *OrdersServiceServer) Create(ctx context.Context, in *pb.CreateOrderRequ
 }
 
 func (s *OrdersServiceServer) Get(ctx context.Context, in *pb.GetOrderRequest) (*pb.GetOrderResponse, error) {
+	// Validate input
+	if in.GetId() < 1 {
+		return nil, errors.New("order ID is wrong")
+	}
+	userID := getUserID(&ctx)
 	var (
 		order   pb.Order
 		coffees string
 		date    time.Time
 	)
-	if err := s.db.QueryRow("SELECT id, userid, coffees, date, total, status FROM orders WHERE id == $1 AND userid == $2",
-							in.GetId(), in.GetUserid()).Scan(&order.Id, &order.Userid, &coffees, &date, &order.Total, &order.Status);
+	if err := s.db.QueryRow("SELECT userID, coffees, date, total, status FROM orders WHERE orderID == $1 AND userID == $2",
+							in.GetId(), userID).Scan(&order.Userid, &coffees, &date, &order.Total, &order.Status);
 	err != nil {
 		return nil, err
 	}
-	if order.Id == 0 {
-		return nil, errors.New("order not found")
-	}
+	order.Id = in.GetId()
 	order.Date = timestamppb.New(date)
 	json.Unmarshal([]byte(coffees), &order.Coffees)
 	return &pb.GetOrderResponse{Order: &order}, nil
 }
 
 func (s *OrdersServiceServer) List(ctx context.Context, in *pb.ListOrderRequest) (*pb.ListOrderResponse, error) {
-	rows, err := s.db.Query("SELECT id, userid, coffees, date, total, status FROM orders WHERE id > $1 AND userid == $2",
-							in.GetShift(), in.GetUserid())
+	// exception handling can be skipped here due to Auth() middleware
+	userID := getUserID(&ctx)
+	rows, err := s.db.Query("SELECT orderID, userID, coffees, date, total, status FROM orders WHERE id > $1 AND userID == $2",
+							in.GetShift(), userID)
 	if err != nil {
 		log.Printf("DB request error: %v", err)
 		return nil, errors.New("there is some problem with DB")

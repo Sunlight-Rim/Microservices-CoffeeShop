@@ -69,8 +69,7 @@ message Order {
 // Create
 
 message CreateOrderRequest {
-    int64 userid = 1;
-    repeated Coffee coffees = 2;
+    repeated Coffee coffees = 1;
 }
 
 message CreateOrderResponse {
@@ -80,8 +79,7 @@ message CreateOrderResponse {
 // Get
 
 message GetOrderRequest {
-    int64 userid = 1;
-    int64 id = 2;
+    int64 id = 1;
 }
 
 message GetOrderResponse {
@@ -91,8 +89,7 @@ message GetOrderResponse {
 // List
 
 message ListOrderRequest {
-    int64 userid = 1;
-    int32 shift = 2;
+    int32 shift = 1;
 }
 
 message ListOrderResponse {
@@ -102,9 +99,8 @@ message ListOrderResponse {
 // Update
 
 message UpdateOrderRequest {
-    int64 userid = 1;
-    int64 id = 2;
-    repeated Coffee coffees = 3;
+    int64 id = 1;
+    repeated Coffee coffees = 2;
 }
 
 message UpdateOrderResponse {
@@ -114,8 +110,7 @@ message UpdateOrderResponse {
 // Delete
 
 message DeleteOrderRequest {
-    int64 userid = 1;
-    int64 id = 2;
+    int64 id = 1;
 }
 
 message DeleteOrderResponse {
