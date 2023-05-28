@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package users;
 
-import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 import "internal/users/proto/annotations.proto";
 
@@ -11,6 +10,7 @@ option go_package = ".;users_pb";
 
 service UsersService {
     rpc Create (CreateUserRequest) returns (CreateUserResponse);
+    // Create() calls from Auth service
     rpc GetMe (GetUserRequest) returns (GetUserResponse) {
         option (google.api.http) = {
             get: "/users"
@@ -32,9 +32,6 @@ service UsersService {
             delete: "/users"
         };
     };
-    // only for OrdersService interaction
-    rpc IncUserOrder (IncUserOrderRequest) returns (google.protobuf.Empty);
-    rpc DecUserOrder (DecUserOrderRequest) returns (google.protobuf.Empty);
 }
 
 message User {
@@ -96,16 +93,4 @@ message DeleteUserRequest {
 
 message DeleteUserResponse {
     User user = 1;
-}
-
-// Increment orders count
-
-message IncUserOrderRequest {
-    int64 id = 1;
-}
-
-// Decrement orders count
-
-message DecUserOrderRequest {
-    int64 id = 1;
 }

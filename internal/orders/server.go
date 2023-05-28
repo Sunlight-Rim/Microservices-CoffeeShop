@@ -13,14 +13,11 @@ import (
 
 /// gRPC SERVER
 
-const ( // TODO: move to config
-	grpcPort  = "50051"
-	usersPort = "50052"
-)
+const grpcPort = "50051" // TODO: move to config
 
 type OrdersServiceServer struct {
 	pb.UnimplementedOrdersServiceServer
-	db    *sql.DB
+	db *sql.DB
 }
 
 func Start() {

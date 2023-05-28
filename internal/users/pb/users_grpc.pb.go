@@ -8,7 +8,6 @@ package users_pb
 
 import (
 	context "context"
-	empty "github.com/golang/protobuf/ptypes/empty"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -20,13 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	UsersService_Create_FullMethodName       = "/users.UsersService/Create"
-	UsersService_GetMe_FullMethodName        = "/users.UsersService/GetMe"
-	UsersService_GetOther_FullMethodName     = "/users.UsersService/GetOther"
-	UsersService_Update_FullMethodName       = "/users.UsersService/Update"
-	UsersService_Delete_FullMethodName       = "/users.UsersService/Delete"
-	UsersService_IncUserOrder_FullMethodName = "/users.UsersService/IncUserOrder"
-	UsersService_DecUserOrder_FullMethodName = "/users.UsersService/DecUserOrder"
+	UsersService_Create_FullMethodName   = "/users.UsersService/Create"
+	UsersService_GetMe_FullMethodName    = "/users.UsersService/GetMe"
+	UsersService_GetOther_FullMethodName = "/users.UsersService/GetOther"
+	UsersService_Update_FullMethodName   = "/users.UsersService/Update"
+	UsersService_Delete_FullMethodName   = "/users.UsersService/Delete"
 )
 
 // UsersServiceClient is the client API for UsersService service.
@@ -38,9 +35,6 @@ type UsersServiceClient interface {
 	GetOther(ctx context.Context, in *GetOtherUserRequest, opts ...grpc.CallOption) (*GetOtherUserResponse, error)
 	Update(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*UpdateUserResponse, error)
 	Delete(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*DeleteUserResponse, error)
-	// only for OrdersService interaction
-	IncUserOrder(ctx context.Context, in *IncUserOrderRequest, opts ...grpc.CallOption) (*empty.Empty, error)
-	DecUserOrder(ctx context.Context, in *DecUserOrderRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 }
 
 type usersServiceClient struct {
@@ -96,24 +90,6 @@ func (c *usersServiceClient) Delete(ctx context.Context, in *DeleteUserRequest, 
 	return out, nil
 }
 
-func (c *usersServiceClient) IncUserOrder(ctx context.Context, in *IncUserOrderRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
-	err := c.cc.Invoke(ctx, UsersService_IncUserOrder_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *usersServiceClient) DecUserOrder(ctx context.Context, in *DecUserOrderRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
-	err := c.cc.Invoke(ctx, UsersService_DecUserOrder_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // UsersServiceServer is the server API for UsersService service.
 // All implementations must embed UnimplementedUsersServiceServer
 // for forward compatibility
@@ -123,9 +99,6 @@ type UsersServiceServer interface {
 	GetOther(context.Context, *GetOtherUserRequest) (*GetOtherUserResponse, error)
 	Update(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error)
 	Delete(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error)
-	// only for OrdersService interaction
-	IncUserOrder(context.Context, *IncUserOrderRequest) (*empty.Empty, error)
-	DecUserOrder(context.Context, *DecUserOrderRequest) (*empty.Empty, error)
 	mustEmbedUnimplementedUsersServiceServer()
 }
 
@@ -147,12 +120,6 @@ func (UnimplementedUsersServiceServer) Update(context.Context, *UpdateUserReques
 }
 func (UnimplementedUsersServiceServer) Delete(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
-}
-func (UnimplementedUsersServiceServer) IncUserOrder(context.Context, *IncUserOrderRequest) (*empty.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method IncUserOrder not implemented")
-}
-func (UnimplementedUsersServiceServer) DecUserOrder(context.Context, *DecUserOrderRequest) (*empty.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DecUserOrder not implemented")
 }
 func (UnimplementedUsersServiceServer) mustEmbedUnimplementedUsersServiceServer() {}
 
@@ -257,42 +224,6 @@ func _UsersService_Delete_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UsersService_IncUserOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(IncUserOrderRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UsersServiceServer).IncUserOrder(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UsersService_IncUserOrder_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UsersServiceServer).IncUserOrder(ctx, req.(*IncUserOrderRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _UsersService_DecUserOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DecUserOrderRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UsersServiceServer).DecUserOrder(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UsersService_DecUserOrder_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UsersServiceServer).DecUserOrder(ctx, req.(*DecUserOrderRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // UsersService_ServiceDesc is the grpc.ServiceDesc for UsersService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -319,14 +250,6 @@ var UsersService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Delete",
 			Handler:    _UsersService_Delete_Handler,
-		},
-		{
-			MethodName: "IncUserOrder",
-			Handler:    _UsersService_IncUserOrder_Handler,
-		},
-		{
-			MethodName: "DecUserOrder",
-			Handler:    _UsersService_DecUserOrder_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
