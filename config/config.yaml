@@ -1,5 +1,6 @@
 host: "localhost"
 port: 8080
+jwtKey: "verySecretKey"
 
 services:
   users:

@@ -30,18 +30,11 @@ func getUserID(ctx *context.Context) int {
 	return payloadMap["id"]
 }
 
-// func Auth() gin.HandlerFunc {
-// 	return func(c *gin.Context) {
-		
-// 	}
-// }
-
 func (s *OrdersServiceServer) Create(ctx context.Context, in *pb.CreateOrderRequest) (*pb.CreateOrderResponse, error) {
 	// Validate input
 	if len(in.GetCoffees()) == 0 {
 		return nil, errors.New("you didn't specify any coffee")
 	}
-	userID := getUserID(&ctx)
 	// Create order
 	date := time.Now()
 	order := pb.Order{
@@ -59,7 +52,7 @@ func (s *OrdersServiceServer) Create(ctx context.Context, in *pb.CreateOrderRequ
 	coffees, _ := json.Marshal(in.GetCoffees())
 	// Append to DB
 	res, err := s.db.Exec("INSERT INTO orders (userid, coffees, total, date, status) VALUES ($1, $2, $3, $4, $5)",
-						  userID, string(coffees), &order.Total, date.Format(time.RFC3339), 0)
+						  getUserID(&ctx), string(coffees), &order.Total, date.Format(time.RFC3339), 0)
 	if err != nil {
 		log.Printf("DB request error: %v", err)
 		return nil, errors.New("there is some problem with DB")
@@ -73,14 +66,13 @@ func (s *OrdersServiceServer) Get(ctx context.Context, in *pb.GetOrderRequest) (
 	if in.GetId() < 1 {
 		return nil, errors.New("order ID is wrong")
 	}
-	userID := getUserID(&ctx)
 	var (
 		order   pb.Order
 		coffees string
 		date    time.Time
 	)
 	if err := s.db.QueryRow("SELECT userID, coffees, date, total, status FROM orders WHERE orderID == $1 AND userID == $2",
-							in.GetId(), userID).Scan(&order.Userid, &coffees, &date, &order.Total, &order.Status);
+							in.GetId(), getUserID(&ctx)).Scan(&order.Userid, &coffees, &date, &order.Total, &order.Status);
 	err != nil {
 		return nil, err
 	}
@@ -91,10 +83,12 @@ func (s *OrdersServiceServer) Get(ctx context.Context, in *pb.GetOrderRequest) (
 }
 
 func (s *OrdersServiceServer) List(ctx context.Context, in *pb.ListOrderRequest) (*pb.ListOrderResponse, error) {
-	// exception handling can be skipped here due to Auth() middleware
-	userID := getUserID(&ctx)
+	// Validate input
+	if in.GetShift() < 0 {
+		return nil, errors.New("shift can be only positive")
+	}
 	rows, err := s.db.Query("SELECT orderID, userID, coffees, date, total, status FROM orders WHERE id > $1 AND userID == $2",
-							in.GetShift(), userID)
+							in.GetShift(), getUserID(&ctx))
 	if err != nil {
 		log.Printf("DB request error: %v", err)
 		return nil, errors.New("there is some problem with DB")
