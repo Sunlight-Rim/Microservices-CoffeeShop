@@ -12,7 +12,9 @@ import (
 
 /// MIDDLEWARE
 
-var h = hmac.New(sha256.New, []byte("verySecretKey"))
+const jwtKey = "verySecretKey" // TODO: move to config
+
+var h = hmac.New(sha256.New, []byte(jwtKey))
 
 func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {

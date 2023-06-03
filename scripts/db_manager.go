@@ -11,7 +11,7 @@ import (
 )
 
 /// DB MANAGER
-// A script for databases creation and fill
+// A script for creating and filling a databases
 
 const ordersPath string = "internal/orders/database/orders.db"
 const usersPath string = "internal/users/database/users.db"
@@ -19,8 +19,8 @@ const usersPath string = "internal/users/database/users.db"
 func ordersManage() error {
 	// Remove DataBase
 	if err := os.Remove(ordersPath); err != nil {
-        return err
-    }
+		return err
+	}
 
 	// Create DataBase
 	file, err := os.Create(ordersPath)
@@ -38,40 +38,57 @@ func ordersManage() error {
 	defer db.Close()
 
 	// Create Tables
-	table := `CREATE TABLE orders (
-				orderID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-				userID INTEGER NOT NULL,
-				status INTEGER,
-				date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-				coffees TEXT,
-				total REAL
-			);`
-	if _, err := db.Exec(table); err != nil {
+	createTables :=
+	`CREATE TABLE coffee (
+		coffeeID INTEGER PRIMARY KEY AUTOINCREMENT,
+		name VARCHAR(60) UNIQUE NOT NULL,
+		price REAL
+	);
+	CREATE TABLE topping (
+		toppingID INTEGER PRIMARY KEY AUTOINCREMENT,
+		name VARCHAR(60) UNIQUE NOT NULL,
+		price REAL
+	);
+	CREATE TABLE order_ (
+		orderID INTEGER PRIMARY KEY AUTOINCREMENT,
+		userID INTEGER NOT NULL,
+		coffeeID INTEGER NOT NULL,
+  		toppingID INTEGER NOT NULL,
+		sugar INTEGER DEFAULT 1,
+  		status INTEGER DEFAULT 0,
+		date TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  		FOREIGN KEY (coffeeID) REFERENCES coffee(coffeeID),
+  		FOREIGN KEY (toppingID) REFERENCES topping(toppingID)
+	);`
+	if _, err := db.Exec(createTables); err != nil {
 		return err
 	}
-	log.Println("Table created successfully!")
+	log.Println("Orders tables created successfully!")
 
 	// Fill tables
-	records := `INSERT INTO orders (
-					userID,
-					status,
-					coffees,
-					total
-				) VALUES (?, ?, ?, ?);`
-	res, err := db.Exec(records, 1, 0, `[{"Type": "Espresso", "Sugar": 2}, {"Type": "Americano", "Sugar": 1}]`, 5.5)
+	insertRecords :=
+	`INSERT INTO coffee(name, price) VALUES ('Espresso', 3.0);
+	INSERT INTO coffee(name, price) VALUES ('Americano', 3.5);
+	INSERT INTO topping(name, price) VALUES ('Banana', 1.0);
+	INSERT INTO topping(name, price) VALUES ('Strawberry', 0.5);
+	
+	INSERT INTO order_(userID, coffeeID, toppingID, sugar, status) VALUES (1, 1, 1, 2, 0);
+	INSERT INTO order_(userID, coffeeID, toppingID) VALUES (1, 2, 1);`
+	res, err := db.Exec(insertRecords)
 	if err != nil {
 		return err
 	}
 	rows, _ := res.RowsAffected()
-	log.Printf("Table filled successfully with %v rows!\n", rows)
+
+	log.Printf("Orders tables filled successfully with %v rows!\n", rows)
 	return nil
 }
 
 func usersManage() error {
 	// Remove DataBase
 	if err := os.Remove(usersPath); err != nil {
-        return err
-    }
+		return err
+	}
 
 	// Create DataBase
 	file, err := os.Create(usersPath)
@@ -79,7 +96,7 @@ func usersManage() error {
 		return err
 	}
 	file.Close()
-	log.Println("User DataBase created successfully!")
+	log.Println("User database created successfully!")
 
 	// Connect to DataBase
 	db, err := sql.Open("sqlite3", usersPath)
@@ -89,32 +106,34 @@ func usersManage() error {
 	defer db.Close()
 
 	// Create Tables
-	table := `CREATE TABLE users (
-				userID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-				username TEXT NOT NULL,
-				address TEXT NOT NULL,
-				passwordHash TEXT NOT NULL,
-				regDate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-			);`
-	if _, err := db.Exec(table); err != nil {
+	createTables :=
+	`CREATE TABLE user (
+		userID INTEGER PRIMARY KEY AUTOINCREMENT,
+		username VARCHAR(30) NOT NULL,
+		address VARCHAR(150) NOT NULL,
+		passwordHash NVARCHAR(100) NOT NULL,
+		date TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+	);`
+	if _, err := db.Exec(createTables); err != nil {
 		return err
 	}
-	log.Println("Table created successfully!")
+	log.Println("User tables created successfully!")
 
 	// Fill tables
-	records := `INSERT INTO users (
-					username,
-					address,
-					passwordHash
-				) VALUES (?, ?, ?);`
+	insertRecords :=
+	`INSERT INTO user (
+		username,
+		address,
+		passwordHash
+	) VALUES (?, ?, ?);`
 	hasher := sha1.New()
-	hasher.Write([]byte("testPassword"))
-	res, err := db.Exec(records, "Test Name", "Test City, 95 st.", hex.EncodeToString(hasher.Sum(nil)))
+	hasher.Write([]byte("testpass"))
+	res, err := db.Exec(insertRecords, "testname", "Test City, Test st.", hex.EncodeToString(hasher.Sum(nil)))
 	if err != nil {
 		return err
 	}
 	rows, _ := res.RowsAffected()
-	log.Printf("Table filled successfully with %v rows!\n", rows)
+	log.Printf("User tables filled successfully with %v rows!\n", rows)
 	return nil
 }
 

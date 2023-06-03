@@ -4,7 +4,7 @@
 - [Auth](#auth)
 - [Users](#users)
 - [Orders](#orders)
-- [DBSchema](#db-schema)
+- [DB Schema](#db-schema)
 
 ## Endpoints
 | URL            | Method   | Request Body                      | Request header | Response Body                                          | Description                                                           |
@@ -311,4 +311,5 @@ Response:
 
 ## DB Schema
 
-![schema](https://i.imgur.com/u3WRbz9.png)
+Database corresponds to 3NF
+![schema](https://i.imgur.com/sg8K5zB.png)
