@@ -8,6 +8,7 @@ package users_pb
 
 import (
 	context "context"
+	empty "github.com/golang/protobuf/ptypes/empty"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -32,7 +33,7 @@ const (
 type UsersServiceClient interface {
 	Create(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error)
 	// Create() calls from Auth service
-	GetMe(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error)
+	GetMe(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*GetUserResponse, error)
 	GetOther(ctx context.Context, in *GetOtherUserRequest, opts ...grpc.CallOption) (*GetOtherUserResponse, error)
 	Update(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*UpdateUserResponse, error)
 	Delete(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*DeleteUserResponse, error)
@@ -55,7 +56,7 @@ func (c *usersServiceClient) Create(ctx context.Context, in *CreateUserRequest, 
 	return out, nil
 }
 
-func (c *usersServiceClient) GetMe(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error) {
+func (c *usersServiceClient) GetMe(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*GetUserResponse, error) {
 	out := new(GetUserResponse)
 	err := c.cc.Invoke(ctx, UsersService_GetMe_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -97,7 +98,7 @@ func (c *usersServiceClient) Delete(ctx context.Context, in *DeleteUserRequest, 
 type UsersServiceServer interface {
 	Create(context.Context, *CreateUserRequest) (*CreateUserResponse, error)
 	// Create() calls from Auth service
-	GetMe(context.Context, *GetUserRequest) (*GetUserResponse, error)
+	GetMe(context.Context, *empty.Empty) (*GetUserResponse, error)
 	GetOther(context.Context, *GetOtherUserRequest) (*GetOtherUserResponse, error)
 	Update(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error)
 	Delete(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error)
@@ -111,7 +112,7 @@ type UnimplementedUsersServiceServer struct {
 func (UnimplementedUsersServiceServer) Create(context.Context, *CreateUserRequest) (*CreateUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
-func (UnimplementedUsersServiceServer) GetMe(context.Context, *GetUserRequest) (*GetUserResponse, error) {
+func (UnimplementedUsersServiceServer) GetMe(context.Context, *empty.Empty) (*GetUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMe not implemented")
 }
 func (UnimplementedUsersServiceServer) GetOther(context.Context, *GetOtherUserRequest) (*GetOtherUserResponse, error) {
@@ -155,7 +156,7 @@ func _UsersService_Create_Handler(srv interface{}, ctx context.Context, dec func
 }
 
 func _UsersService_GetMe_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetUserRequest)
+	in := new(empty.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -167,7 +168,7 @@ func _UsersService_GetMe_Handler(srv interface{}, ctx context.Context, dec func(
 		FullMethod: UsersService_GetMe_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UsersServiceServer).GetMe(ctx, req.(*GetUserRequest))
+		return srv.(UsersServiceServer).GetMe(ctx, req.(*empty.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }

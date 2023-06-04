@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package auth;
+
+import "internal/auth/proto/annotations.proto";
+
+option go_package = ".;auth_pb";
+
+
+service AuthService {
+    rpc Signup (SignupAuthRequest) returns (SignupAuthResponse) {
+        option (google.api.http) = {
+            post: "/auth/signup"
+            body: "*"
+        };
+    }
+    rpc Login (LoginAuthRequest) returns (LoginAuthResponse) {
+        option (google.api.http) = {
+            post: "/auth/login"
+            body: "*"
+        };
+    };
+    rpc Refresh (RefreshAuthRequest) returns (RefreshAuthResponse) {
+        option (google.api.http) = {
+            post: "/auth/refresh"
+            body: "*"
+        };
+    };
+}
+
+// Signup
+
+message SignupAuthRequest {
+    string username = 1;
+    string password = 2;
+    string address = 3;
+}
+
+message SignupAuthResponse {
+    uint32 id = 1;
+    string username = 2;
+    string password = 3;
+    string address = 4;
+}
+
+// Login
+
+message LoginAuthRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message LoginAuthResponse {
+    string accessToken = 1;
+    string refreshToken = 2;
+}
+
+// Refresh
+
+message RefreshAuthRequest {
+    string refreshToken = 1;
+}
+
+message RefreshAuthResponse {
+    string accessToken = 1;
+    string refreshToken = 2;
+}

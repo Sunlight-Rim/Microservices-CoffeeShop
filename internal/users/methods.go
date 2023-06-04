@@ -1,6 +1,40 @@
 package users
 
+import (
+	pb "coffeeshop/internal/users/pb"
+	"context"
+	"encoding/base64"
+	"encoding/json"
+	"strings"
+	"time"
+
+	empty "github.com/golang/protobuf/ptypes/empty"
+
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/protobuf/types/known/timestamppb"
+)
+
 /// API METHODS IMPLEMENTATION
+
+func getUserID(ctx *context.Context) uint32 {
+	// exception handling can be skipped here due to Auth() middleware
+	md, _ := metadata.FromIncomingContext(*ctx)
+	tokenPayload, _ := base64.StdEncoding.DecodeString(strings.Split(strings.Split(md["authorization"][0], " ")[1], ".")[1] + "==")
+	var payload map[string]uint32
+	json.Unmarshal(tokenPayload, &payload)
+	return payload["id"]
+}
+
+func (s *UsersServiceServer) GetUser(ctx context.Context, empty *empty.Empty) (*pb.GetUserResponse, error) {
+	user := &pb.User{
+		Id: getUserID(&ctx),
+	}
+	var date time.Time
+	s.db.QueryRow("SELECT username, address, date FROM user WHERE userID == $1",
+					 user.Id).Scan(&user.Username, &user.Address, &date)
+	user.Regdate = timestamppb.New(date)
+	return &pb.GetUserResponse{User: user}, nil
+}
 
 // func (s *UsersServiceServer) Create(ctx context.Context, in *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
 // 	// Validate input
@@ -31,43 +65,6 @@ package users
 // 	}
 // 	user.Id, _ = res.LastInsertId()
 // 	return &pb.CreateUserResponse{User: &user}, nil
-// }
-
-// func (s *UsersServiceServer) Login(ctx context.Context, in *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
-// 	// Check username and password
-// 	var id int64
-// 	if s.db.QueryRow("SELECT id FROM users WHERE username == $1 AND password == $2",
-// 					 in.GetUsername(), in.GetPassword()).Scan(&id); id == 0 {
-// 		return nil, errors.New("username or password is incorrect")
-// 	}
-// 	// Generate token
-// 	var token string
-// 	for i := 0; i < 10; i++ {
-// 		hash := md5.Sum([]byte(in.GetUsername() + in.GetPassword() + time.Now().Format(time.RFC3339)))
-// 		token = hex.EncodeToString(hash[:])
-// 		var checkId int64
-// 		if s.db.QueryRow("SELECT id FROM users WHERE token == $1", token).Scan(&checkId); checkId == 0 { break }
-// 	}
-// 	if _, err := s.db.Exec("UPDATE users SET token = $1 WHERE id == $2", token, id); err != nil {
-// 		log.Printf("DB request error: %v", err)
-// 		return nil, errors.New("there is some problem with DB")
-// 	}
-// 	return &pb.LoginUserResponse{Id: id, Token: token}, nil
-// }
-
-// func (s *UsersServiceServer) Get(ctx context.Context, in *pb.GetUserRequest) (*pb.ListUserResponse, error) {
-// 	var ( user    pb.User
-// 		  orders  string
-// 		  regdate time.Time )
-// 	// Check token & get data
-// 	if s.db.QueryRow("SELECT id, username, address, reg_date, order_ids FROM users WHERE token == $1",
-// 					 in.GetToken()).Scan(&user.Id, &user.Username, &user.Address, &regdate, &orders);
-// 					 user.Id == 0 {
-// 		return nil, errors.New("token is incorrect")
-// 	}
-// 	if orders != "" { json.Unmarshal([]byte("["+orders[:len(orders)-1]+"]"), &user.OrderIds) }
-// 	user.Regdate = timestamppb.New(regdate)
-// 	return &pb.ListUserResponse{Users: []*pb.User{ &user }}, nil
 // }
 
 // func (s *UsersServiceServer) List(ctx context.Context, in *pb.ListUserRequest) (*pb.ListUserResponse, error) {

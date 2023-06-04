@@ -10,7 +10,7 @@ You can register, login, order some coffee, view the history of your coffee orde
 Application architecture:
 ![schema](https://i.imgur.com/lIdaGaP.jpg)
 
-There are Auth authentication service, Orders and Users services that realizes CRUD operations. All these services are connected to API Gateway via gRPC and are calling externally via REST. Auth also connected to Users for registration. Endpoints and API methods you can see in [Documentation](/docs/documentation.md) \
+There are Auth authentication service by JWT tokens, Orders and Users services that realizes CRUD operations. All these services are connected to API Gateway via gRPC and are calling externally via REST. Auth also connected to Users for registration. Endpoints and API methods you can see in [Documentation](/docs/documentation.md). \
 The folders structure was inspired by [Standard Go Project Layout](https://github.com/golang-standards/project-layout) and persist in each service. Here are:
 - `api`: some REST requests examples
 - `cmd`: contains entry point of application
