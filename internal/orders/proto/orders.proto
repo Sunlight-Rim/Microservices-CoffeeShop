@@ -12,8 +12,8 @@ option go_package = ".;orders_pb";
 service OrdersService {
     rpc Create (CreateOrderRequest) returns (CreateOrderResponse) {
         option (google.api.http) = {
-            post: "/orders"
-            body: "coffees"
+            post: "/order"
+            body: "*"
         };
         // option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
         //     parameters: {
@@ -27,30 +27,25 @@ service OrdersService {
     };
     rpc Get (GetOrderRequest) returns (GetOrderResponse) {
         option (google.api.http) = {
-            get: "/orders/{id}"
+            get: "/order/{id}"
         };
     };
     rpc List (ListOrderRequest) returns (ListOrderResponse) {
         option (google.api.http) = {
-            get: "/orders"
+            get: "/order"
         };
     };
     rpc Update (UpdateOrderRequest) returns (UpdateOrderResponse) {
         option (google.api.http) = {
-            patch: "/orders/{id}"
+            patch: "/order/{id}"
             body: "*"
         };
     };
     rpc Delete (DeleteOrderRequest) returns (DeleteOrderResponse) {
         option (google.api.http) = {
-            delete: "/orders/{id}"
+            delete: "/order/{id}"
         };
     };
-}
-
-message Coffee {
-    string type = 1;
-    int32 sugar = 2;
 }
 
 message Order {
@@ -58,18 +53,22 @@ message Order {
         PENDING = 0;
         DELIVERED = 1;
     }
-    int64 id = 1;
-    int64 userid = 2;
+    uint32 id = 1;
+    uint32 userid = 2;
     Status status = 3;
-    google.protobuf.Timestamp date = 4;
-    repeated Coffee coffees = 5;
-    float total = 6;
+    string coffee = 4;
+    string topping = 5;
+    uint32 sugar = 6;
+    float total = 7;
+    google.protobuf.Timestamp date = 8;
 }
 
 // Create
 
 message CreateOrderRequest {
-    repeated Coffee coffees = 1;
+    string coffee = 1;
+    string topping = 2;
+    uint32 sugar = 3;
 }
 
 message CreateOrderResponse {
@@ -79,7 +78,7 @@ message CreateOrderResponse {
 // Get
 
 message GetOrderRequest {
-    int64 id = 1;
+    uint32 id = 1;
 }
 
 message GetOrderResponse {
@@ -87,9 +86,9 @@ message GetOrderResponse {
 }
 
 // List
-
+// Returns only 5 orders per request
 message ListOrderRequest {
-    int32 shift = 1;
+    uint32 shift = 1;
 }
 
 message ListOrderResponse {
@@ -99,8 +98,10 @@ message ListOrderResponse {
 // Update
 
 message UpdateOrderRequest {
-    int64 id = 1;
-    repeated Coffee coffees = 2;
+    uint32 id = 1;
+    string coffee = 2;
+    string topping = 3;
+    uint32 sugar = 4;
 }
 
 message UpdateOrderResponse {

@@ -3,6 +3,9 @@ port: 8080
 jwtKey: "verySecretKey"
 
 services:
+  auth:
+    url: "/auth"
+    port: 50050
   users:
     url: "/user"
     port: 50051

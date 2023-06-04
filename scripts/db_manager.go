@@ -39,27 +39,27 @@ func ordersManage() error {
 
 	// Create Tables
 	createTables :=
-	`CREATE TABLE coffee (
-		coffeeID INTEGER PRIMARY KEY AUTOINCREMENT,
-		name VARCHAR(60) UNIQUE NOT NULL,
-		price REAL
-	);
-	CREATE TABLE topping (
-		toppingID INTEGER PRIMARY KEY AUTOINCREMENT,
-		name VARCHAR(60) UNIQUE NOT NULL,
-		price REAL
-	);
-	CREATE TABLE order_ (
-		orderID INTEGER PRIMARY KEY AUTOINCREMENT,
-		userID INTEGER NOT NULL,
-		coffeeID INTEGER NOT NULL,
-  		toppingID INTEGER NOT NULL,
-		sugar INTEGER DEFAULT 1,
-  		status INTEGER DEFAULT 0,
-		date TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-  		FOREIGN KEY (coffeeID) REFERENCES coffee(coffeeID),
-  		FOREIGN KEY (toppingID) REFERENCES topping(toppingID)
-	);`
+		`CREATE TABLE coffee (
+			coffeeID INTEGER PRIMARY KEY AUTOINCREMENT,
+			name VARCHAR(60) UNIQUE NOT NULL,
+			price REAL
+		);
+		CREATE TABLE topping (
+			toppingID INTEGER PRIMARY KEY AUTOINCREMENT,
+			name VARCHAR(60) UNIQUE NOT NULL,
+			price REAL
+		);
+		CREATE TABLE order_ (
+			orderID INTEGER PRIMARY KEY AUTOINCREMENT,
+			userID INTEGER NOT NULL,
+			coffeeID INTEGER NOT NULL,
+			toppingID INTEGER NOT NULL,
+			sugar INTEGER DEFAULT 1,
+			status INTEGER DEFAULT 0,
+			date TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+			FOREIGN KEY (coffeeID) REFERENCES coffee(coffeeID),
+			FOREIGN KEY (toppingID) REFERENCES topping(toppingID)
+		);`
 	if _, err := db.Exec(createTables); err != nil {
 		return err
 	}
@@ -67,13 +67,14 @@ func ordersManage() error {
 
 	// Fill tables
 	insertRecords :=
-	`INSERT INTO coffee(name, price) VALUES ('Espresso', 3.0);
-	INSERT INTO coffee(name, price) VALUES ('Americano', 3.5);
-	INSERT INTO topping(name, price) VALUES ('Banana', 1.0);
-	INSERT INTO topping(name, price) VALUES ('Strawberry', 0.5);
-	
-	INSERT INTO order_(userID, coffeeID, toppingID, sugar, status) VALUES (1, 1, 1, 2, 0);
-	INSERT INTO order_(userID, coffeeID, toppingID) VALUES (1, 2, 1);`
+		`INSERT INTO coffee(name, price) VALUES ('Espresso', 3.0);
+		INSERT INTO coffee(name, price) VALUES ('Americano', 3.5);
+		INSERT INTO topping(name, price) VALUES ('', 0.0);
+		INSERT INTO topping(name, price) VALUES ('Banana', 0.5);
+		INSERT INTO topping(name, price) VALUES ('Strawberry', 0.5);
+		
+		INSERT INTO order_(userID, coffeeID, toppingID, sugar, status) VALUES (1, 1, 1, 2, 0);
+		INSERT INTO order_(userID, coffeeID, toppingID) VALUES (1, 2, 1);`
 	res, err := db.Exec(insertRecords)
 	if err != nil {
 		return err
@@ -107,13 +108,13 @@ func usersManage() error {
 
 	// Create Tables
 	createTables :=
-	`CREATE TABLE user (
-		userID INTEGER PRIMARY KEY AUTOINCREMENT,
-		username VARCHAR(30) NOT NULL,
-		address VARCHAR(150) NOT NULL,
-		passwordHash NVARCHAR(100) NOT NULL,
-		date TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-	);`
+		`CREATE TABLE user (
+			userID INTEGER PRIMARY KEY AUTOINCREMENT,
+			username VARCHAR(30) NOT NULL,
+			address VARCHAR(150) NOT NULL,
+			passwordHash NVARCHAR(100) NOT NULL,
+			date TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+		);`
 	if _, err := db.Exec(createTables); err != nil {
 		return err
 	}
@@ -121,11 +122,11 @@ func usersManage() error {
 
 	// Fill tables
 	insertRecords :=
-	`INSERT INTO user (
-		username,
-		address,
-		passwordHash
-	) VALUES (?, ?, ?);`
+		`INSERT INTO user (
+			username,
+			address,
+			passwordHash
+		) VALUES (?, ?, ?);`
 	hasher := sha1.New()
 	hasher.Write([]byte("testpass"))
 	res, err := db.Exec(insertRecords, "testname", "Test City, Test st.", hex.EncodeToString(hasher.Sum(nil)))

@@ -31,6 +31,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UsersServiceClient interface {
 	Create(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error)
+	// Create() calls from Auth service
 	GetMe(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error)
 	GetOther(ctx context.Context, in *GetOtherUserRequest, opts ...grpc.CallOption) (*GetOtherUserResponse, error)
 	Update(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*UpdateUserResponse, error)
@@ -95,6 +96,7 @@ func (c *usersServiceClient) Delete(ctx context.Context, in *DeleteUserRequest, 
 // for forward compatibility
 type UsersServiceServer interface {
 	Create(context.Context, *CreateUserRequest) (*CreateUserResponse, error)
+	// Create() calls from Auth service
 	GetMe(context.Context, *GetUserRequest) (*GetUserResponse, error)
 	GetOther(context.Context, *GetOtherUserRequest) (*GetOtherUserResponse, error)
 	Update(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error)

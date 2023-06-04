@@ -16,49 +16,56 @@ import (
 
 /// API METHODS IMPLEMENTATION
 
-var coffeePrices = map[string]float32{
-	"Espresso":  2,
-	"Americano": 2.5,
-}
-
-func getUserID(ctx *context.Context) int {
+func getUserID(ctx *context.Context) uint32 {
 	// exception handling can be skipped here due to Auth() middleware
 	md, _ := metadata.FromIncomingContext(*ctx)
 	tokenPayload, _ := base64.StdEncoding.DecodeString(strings.Split(strings.Split(md["authorization"][0], " ")[1], ".")[1] + "==")
-	var payloadMap map[string]int
-	json.Unmarshal(tokenPayload, &payloadMap)
-	return payloadMap["id"]
+	var payload map[string]uint32
+	json.Unmarshal(tokenPayload, &payload)
+	return payload["id"]
 }
 
 func (s *OrdersServiceServer) Create(ctx context.Context, in *pb.CreateOrderRequest) (*pb.CreateOrderResponse, error) {
 	// Validate input
-	if len(in.GetCoffees()) == 0 {
+	if len(in.GetCoffee()) == 0 {
 		return nil, errors.New("you didn't specify any coffee")
 	}
 	// Create order
-	date := time.Now()
-	order := pb.Order{
-		Coffees: in.GetCoffees(),
-		Date:    timestamppb.New(date),
+	order := &pb.Order{
+		Userid:  getUserID(&ctx),
+		Coffee:  in.GetCoffee(),
+		Topping: in.GetTopping(),
+		Sugar:   in.GetSugar(),
+		Date:    timestamppb.New(time.Now()),
 		Status:  pb.Order_Status(0),
 	}
-	for _, c := range in.GetCoffees() {
-		price, ok := coffeePrices[c.Type]
-		if !ok {
-			return nil, errors.New("unknown coffee type")
+	var coffeeID, toppingID uint32
+	// Sum coffee price & get id
+	if err := s.db.QueryRow(`SELECT coffeeID, price FROM coffee WHERE name == $1`,
+			  order.Coffee).Scan(&coffeeID, &order.Total);
+	err != nil {
+		return nil, errors.New("specified coffee type was wrong")
+	}
+	// Sum topping price & get id
+	if order.Topping != "" {
+		var price float32
+		if err := s.db.QueryRow(`SELECT toppingID, price FROM topping WHERE name == $1`,
+				  order.Topping).Scan(&toppingID, &price);
+		err != nil {
+			return nil, errors.New("specified topping type was wrong")
 		}
 		order.Total += price
 	}
-	coffees, _ := json.Marshal(in.GetCoffees())
 	// Append to DB
-	res, err := s.db.Exec("INSERT INTO orders (userid, coffees, total, date, status) VALUES ($1, $2, $3, $4, $5)",
-						  getUserID(&ctx), string(coffees), &order.Total, date.Format(time.RFC3339), 0)
+	res, err := s.db.Exec(`INSERT INTO order_ (userID, coffeeID, toppingID, sugar) VALUES ($1, $2, $3, $4)`,
+				order.Userid, coffeeID, toppingID, order.Sugar)
 	if err != nil {
 		log.Printf("DB request error: %v", err)
 		return nil, errors.New("there is some problem with DB")
 	}
-	order.Id, _ = res.LastInsertId()
-	return &pb.CreateOrderResponse{Order: &order}, nil
+	id, _ := res.LastInsertId()
+	order.Id = uint32(id)
+	return &pb.CreateOrderResponse{Order: order}, nil
 }
 
 func (s *OrdersServiceServer) Get(ctx context.Context, in *pb.GetOrderRequest) (*pb.GetOrderResponse, error) {
@@ -66,45 +73,51 @@ func (s *OrdersServiceServer) Get(ctx context.Context, in *pb.GetOrderRequest) (
 	if in.GetId() < 1 {
 		return nil, errors.New("order ID is wrong")
 	}
-	var (
-		order   pb.Order
-		coffees string
-		date    time.Time
-	)
-	if err := s.db.QueryRow("SELECT userID, coffees, date, total, status FROM orders WHERE orderID == $1 AND userID == $2",
-							in.GetId(), getUserID(&ctx)).Scan(&order.Userid, &coffees, &date, &order.Total, &order.Status);
+	order := &pb.Order{
+		Id: in.GetId(),
+		Userid: getUserID(&ctx),
+	}
+	var toppingPrice float32
+	var date time.Time
+	if err := s.db.QueryRow(
+		`SELECT coffee.name, coffee.price, topping.name, topping.price, sugar, status, date
+		FROM order_ INNER JOIN
+			 coffee ON order_.coffeeID == coffee.coffeeID INNER JOIN
+			 topping ON order_.toppingID == topping.toppingID
+		WHERE order_.orderID == $1 AND order_.userID == $2;`,
+		order.Id, order.Userid).Scan(&order.Coffee, &order.Total, &order.Topping,
+									 &toppingPrice, &order.Sugar, &order.Status, &date);
 	err != nil {
 		return nil, err
 	}
-	order.Id = in.GetId()
 	order.Date = timestamppb.New(date)
-	json.Unmarshal([]byte(coffees), &order.Coffees)
-	return &pb.GetOrderResponse{Order: &order}, nil
+	order.Total += toppingPrice
+	return &pb.GetOrderResponse{Order: order}, nil
 }
 
-func (s *OrdersServiceServer) List(ctx context.Context, in *pb.ListOrderRequest) (*pb.ListOrderResponse, error) {
-	// Validate input
-	if in.GetShift() < 0 {
-		return nil, errors.New("shift can be only positive")
-	}
-	rows, err := s.db.Query("SELECT orderID, userID, coffees, date, total, status FROM orders WHERE id > $1 AND userID == $2",
-							in.GetShift(), getUserID(&ctx))
-	if err != nil {
-		log.Printf("DB request error: %v", err)
-		return nil, errors.New("there is some problem with DB")
-	}
-	defer rows.Close()
-	var (
-		orders  []*pb.Order
-		coffees string
-		date    time.Time
-	)
-	for rows.Next() {
-		order := pb.Order{}
-		rows.Scan(&order.Id, &coffees, &date, &order.Total, &order.Status)
-		order.Date = timestamppb.New(date)
-		json.Unmarshal([]byte(coffees), &order.Coffees)
-		orders = append(orders, &order)
-	}
-	return &pb.ListOrderResponse{Orders: orders}, nil
-}
+// func (s *OrdersServiceServer) List(ctx context.Context, in *pb.ListOrderRequest) (*pb.ListOrderResponse, error) {
+// 	// Validate input
+// 	if in.GetShift() < 0 {
+// 		return nil, errors.New("shift can be only positive")
+// 	}
+// 	rows, err := s.db.Query("SELECT orderID, userID, coffees, date, total, status FROM orders WHERE id > $1 AND userID == $2",
+// 							in.GetShift(), getUserID(&ctx))
+// 	if err != nil {
+// 		log.Printf("DB request error: %v", err)
+// 		return nil, errors.New("there is some problem with DB")
+// 	}
+// 	defer rows.Close()
+// 	var (
+// 		orders  []*pb.Order
+// 		coffees string
+// 		date    time.Time
+// 	)
+// 	for rows.Next() {
+// 		order := pb.Order{}
+// 		rows.Scan(&order.Id, &coffees, &date, &order.Total, &order.Status)
+// 		order.Date = timestamppb.New(date)
+// 		json.Unmarshal([]byte(coffees), &order.Coffees)
+// 		orders = append(orders, &order)
+// 	}
+// 	return &pb.ListOrderResponse{Orders: orders}, nil
+// }

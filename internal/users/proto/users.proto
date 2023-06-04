@@ -13,23 +13,23 @@ service UsersService {
     // Create() calls from Auth service
     rpc GetMe (GetUserRequest) returns (GetUserResponse) {
         option (google.api.http) = {
-            get: "/users"
+            get: "/user"
         };
     };
     rpc GetOther (GetOtherUserRequest) returns (GetOtherUserResponse) {
         option (google.api.http) = {
-            get: "/users/{id}"
+            get: "/user/{id}"
         };
     };
     rpc Update (UpdateUserRequest) returns (UpdateUserResponse) {
         option (google.api.http) = {
-            patch: "/users"
+            patch: "/user"
             body: "*"
         };
     };
     rpc Delete (DeleteUserRequest) returns (DeleteUserResponse) {
         option (google.api.http) = {
-            delete: "/users"
+            delete: "/user"
         };
     };
 }
