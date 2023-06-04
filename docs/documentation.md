@@ -7,20 +7,20 @@
 - [DB Schema](#db-schema)
 
 ## Endpoints
-| URL            | Method   | Request Body                      | Request header | Response Body                                          | Description                                                           |
-|----------------|----------|-----------------------------------|----------------|--------------------------------------------------------|-----------------------------------------------------------------------|
-| /auth/signup   | `POST`   | username<br> address<br> password |                | id<br> username<br> address<br> regdate                | Register user                                                         |
-| /auth/login    | `POST`   | username<br> password             |                | accessToken<br> refreshToken                           | Login user and get pair of tokens                                     |
-| /auth/refresh  | `POST`   | refreshToken                      |                | accessToken                                            | Refresh access token                                                  |
-| /user          | `GET`    |                                   | accessToken    | id<br> username<br> address<br> regdate                | View data of your account                                             |
-| /user/1        | `GET`    |                                   | accessToken    | id<br> username<br> address<br> regdate                | View data of user with id=1                                           |
-| /user          | `PATCH`  | username<br> address<br> password | accessToken    | id<br> username<br> address<br> regdate                | Change some info of your account                                      |
-| /user          | `DELETE` |                                   | accessToken    | id<br> username<br> address<br> regdate                | Delete your account                                                   |
-| /order         | `POST`   | type<br> topping<br> sugar<br>    | accessToken    | id<br> status<br> date<br> coffees<br> total           | Create new order with specified coffees                               |
-| /order/1       | `GET`    |                                   | accessToken    | id<br> status<br> date<br> coffees<br> total           | View your certain order                                               |
-| /order?shift=0 | `GET`    |                                   | accessToken    | [id<br> status<br> date<br> coffees<br> total]<br> ... | View some your orders. Returns 5 orders<br> starting from the "shift" |
-| /order/1       | `PATCH`  | type<br> topping<br> sugar<br>    | accessToken    | id<br> status<br> date<br> coffees<br> total           | Update your order (if order status hasn't been "DELIVERED")           |
-| /order/1       | `DELETE` |                                   | accessToken    | id<br> status<br> date<br> coffees<br> total           | Delete your certain order                                             |
+| URL            | Method   | Request Body                      | Request header | Response Body                                                                        | Description                                                        |
+|----------------|----------|-----------------------------------|----------------|--------------------------------------------------------------------------------------|--------------------------------------------------------------------|
+| /auth/signup   | `POST`   | username<br> address<br> password |                | id<br> username<br> address<br> regdate                                              | Register user                                                      |
+| /auth/login    | `POST`   | username<br> password             |                | accessToken<br> refreshToken                                                         | Login user and get pair of tokens                                  |
+| /auth/refresh  | `POST`   | refreshToken                      |                | accessToken                                                                          | Refresh access token                                               |
+| /user          | `GET`    |                                   | accessToken    | id<br> username<br> address<br> regdate                                              | View data of your account                                          |
+| /user/1        | `GET`    |                                   | accessToken    | id<br> username<br> address<br> regdate                                              | View data of user with id=1                                        |
+| /user          | `PATCH`  | username<br> address<br> regdate  | accessToken    | id<br> username<br> address<br> regdate                                              | Change some info of your account                                   |
+| /user          | `DELETE` |                                   | accessToken    | id<br> username<br> address<br> regdate                                              | Delete your account                                                |
+| /order         | `POST`   | type  topping  sugar              | accessToken    | id<br> userid<br> status<br> coffee<br> topping<br> sugar<br> total<br> date         | Create new order with specified coffees                            |
+| /order/1       | `GET`    |                                   | accessToken    | id<br> userid<br> status<br> coffee<br> topping<br> sugar<br> total<br> date         | View your certain order                                            |
+| /order?shift=0 | `GET`    |                                   | accessToken    | [5]<br> id<br> userid<br> status<br> coffee<br> topping<br> sugar<br> total<br> date | View some your orders. Returns 5 orders  starting from the "shift" |
+| /order/1       | `PATCH`  | id                                | accessToken    | id<br> userid<br> status<br> coffee<br> topping<br> sugar<br> total<br> date         | Cancel your order (if order status hasn't been "DELIVERED")        |
+| /order/1       | `DELETE` |                                   | accessToken    | id<br> userid<br> status<br> coffee<br> topping<br> sugar<br> total<br> date         | Delete your certain order                                          |
 
 ## Auth
 
@@ -141,59 +141,57 @@ Response:
 
 ### Get some Orders
 
-Get some orders:
+Get some orders by specifying a shift (offset):
 ```shell
 curl -X GET http://localhost:8080/order?shift=0 \
     -H "Content-Type: application/json" \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZXhwIjoxNTE2MjM5MDIyfQ.s_miVYCHBD3ZEFbfwOsdtrMsVtU7JM-ByB_ecLM8LrQ" \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZXhwIjoxNTE2MjM5MDIyfQ.s_miVYCHBD3ZEFbfwOsdtrMsVtU7JM-ByB_ecLM8LrQ"
 ```
 Response:
 ```json
 "orders": [
   {
-    "id": "1",
-    "coffees": [
-      {"type": "Americano"}
-    ],
-    "total": 2.5,
-    "date": "2023-05-05T23:25:13Z"
+    "id": 1,
+    "userid": 1,
+    "status": "DELIVERED",
+    "coffee": "Americano",
+    "topping": "",
+    "sugar": 1,
+    "total": 3.5,
+    "date": "2023-05-06T15:43:17Z"
   },
   {
-    "id": "2",
-    "coffees": [
-      {"type": "Espresso", "sugar": 10},
-      {"type": "Americano", "sugar": 8}
-    ],
-    "total": 4.5,
+    "id": 2,
+    "userid": 1,
+    "status": "PENDING",
+    "coffee": "Espresso",
+    "topping": "Banana",
+    "sugar": 2,
+    "total": 3.5,
     "date": "2023-05-06T22:07:51Z"
   }
 ]
 ```
 
-### Update Order
+### Cancel Order
 
-You can update order only if its status is not DELIVERED:
+You can cancel order only if its current status is not DELIVERED:
 ```shell
-curl -X POST http://localhost:8080/order \
+curl -X PATCH http://localhost:8080/order/2 \
     -H "Content-Type: application/json" \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZXhwIjoxNTE2MjM5MDIyfQ.s_miVYCHBD3ZEFbfwOsdtrMsVtU7JM-ByB_ecLM8LrQ" \
-    -d '{
-        "coffees": [
-          {"type": "Espresso", "sugar": 10},
-          {"type": "Americano", "sugar": 8}
-        ]
-    }'
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZXhwIjoxNTE2MjM5MDIyfQ.s_miVYCHBD3ZEFbfwOsdtrMsVtU7JM-ByB_ecLM8LrQ"
 ```
 Response:
 
 ```json
   "order": {
-    "id": "2",
-    "coffees": [
-      {"type": "Espresso", "sugar": 10},
-      {"type": "Americano", "sugar": 8}
-    ],
-    "total": 4.5,
+    "id": 2,
+    "userid": 1,
+    "status": "CANCELLED",
+    "coffee": "Espresso",
+    "topping": "Banana",
+    "sugar": 2,
+    "total": 3.5,
     "date": "2023-05-06T22:07:51Z"
   }
 ```
@@ -202,23 +200,21 @@ Response:
 
 To delete order:
 ```shell
-curl -X POST http://localhost:8080/order \
+curl -X POST http://localhost:8080/order/2 \
     -H "Content-Type: application/json" \
-    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZXhwIjoxNTE2MjM5MDIyfQ.s_miVYCHBD3ZEFbfwOsdtrMsVtU7JM-ByB_ecLM8LrQ" \
-    -d '{
-        "id": 2
-    }'
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZXhwIjoxNTE2MjM5MDIyfQ.s_miVYCHBD3ZEFbfwOsdtrMsVtU7JM-ByB_ecLM8LrQ"
 ```
 Response:
 
 ```json
   "order": {
-    "id": "2",
-    "coffees": [
-      {"type": "Espresso", "sugar": 10},
-      {"type": "Americano", "sugar": 8}
-    ],
-    "total": 4.5,
+    "id": 2,
+    "userid": 1,
+    "status": "CANCELLED",
+    "coffee": "Espresso",
+    "topping": "Banana",
+    "sugar": 2,
+    "total": 3.5,
     "date": "2023-05-06T22:07:51Z"
   }
 ```

@@ -35,10 +35,9 @@ service OrdersService {
             get: "/order"
         };
     };
-    rpc Update (UpdateOrderRequest) returns (UpdateOrderResponse) {
+    rpc Cancel (CancelOrderRequest) returns (CancelOrderResponse) {
         option (google.api.http) = {
             patch: "/order/{id}"
-            body: "*"
         };
     };
     rpc Delete (DeleteOrderRequest) returns (DeleteOrderResponse) {
@@ -52,6 +51,7 @@ message Order {
     enum Status {
         PENDING = 0;
         DELIVERED = 1;
+        CANCELLED = 2;
     }
     uint32 id = 1;
     uint32 userid = 2;
@@ -95,23 +95,20 @@ message ListOrderResponse {
     repeated Order orders = 1;
 }
 
-// Update
+// Cancel
 
-message UpdateOrderRequest {
+message CancelOrderRequest {
     uint32 id = 1;
-    string coffee = 2;
-    string topping = 3;
-    uint32 sugar = 4;
 }
 
-message UpdateOrderResponse {
+message CancelOrderResponse {
     Order order = 1;
 }
 
 // Delete
 
 message DeleteOrderRequest {
-    int64 id = 1;
+    uint32 id = 1;
 }
 
 message DeleteOrderResponse {

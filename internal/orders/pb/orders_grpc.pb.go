@@ -22,7 +22,7 @@ const (
 	OrdersService_Create_FullMethodName = "/orders.OrdersService/Create"
 	OrdersService_Get_FullMethodName    = "/orders.OrdersService/Get"
 	OrdersService_List_FullMethodName   = "/orders.OrdersService/List"
-	OrdersService_Update_FullMethodName = "/orders.OrdersService/Update"
+	OrdersService_Cancel_FullMethodName = "/orders.OrdersService/Cancel"
 	OrdersService_Delete_FullMethodName = "/orders.OrdersService/Delete"
 )
 
@@ -33,7 +33,7 @@ type OrdersServiceClient interface {
 	Create(ctx context.Context, in *CreateOrderRequest, opts ...grpc.CallOption) (*CreateOrderResponse, error)
 	Get(ctx context.Context, in *GetOrderRequest, opts ...grpc.CallOption) (*GetOrderResponse, error)
 	List(ctx context.Context, in *ListOrderRequest, opts ...grpc.CallOption) (*ListOrderResponse, error)
-	Update(ctx context.Context, in *UpdateOrderRequest, opts ...grpc.CallOption) (*UpdateOrderResponse, error)
+	Cancel(ctx context.Context, in *CancelOrderRequest, opts ...grpc.CallOption) (*CancelOrderResponse, error)
 	Delete(ctx context.Context, in *DeleteOrderRequest, opts ...grpc.CallOption) (*DeleteOrderResponse, error)
 }
 
@@ -72,9 +72,9 @@ func (c *ordersServiceClient) List(ctx context.Context, in *ListOrderRequest, op
 	return out, nil
 }
 
-func (c *ordersServiceClient) Update(ctx context.Context, in *UpdateOrderRequest, opts ...grpc.CallOption) (*UpdateOrderResponse, error) {
-	out := new(UpdateOrderResponse)
-	err := c.cc.Invoke(ctx, OrdersService_Update_FullMethodName, in, out, opts...)
+func (c *ordersServiceClient) Cancel(ctx context.Context, in *CancelOrderRequest, opts ...grpc.CallOption) (*CancelOrderResponse, error) {
+	out := new(CancelOrderResponse)
+	err := c.cc.Invoke(ctx, OrdersService_Cancel_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ type OrdersServiceServer interface {
 	Create(context.Context, *CreateOrderRequest) (*CreateOrderResponse, error)
 	Get(context.Context, *GetOrderRequest) (*GetOrderResponse, error)
 	List(context.Context, *ListOrderRequest) (*ListOrderResponse, error)
-	Update(context.Context, *UpdateOrderRequest) (*UpdateOrderResponse, error)
+	Cancel(context.Context, *CancelOrderRequest) (*CancelOrderResponse, error)
 	Delete(context.Context, *DeleteOrderRequest) (*DeleteOrderResponse, error)
 	mustEmbedUnimplementedOrdersServiceServer()
 }
@@ -115,8 +115,8 @@ func (UnimplementedOrdersServiceServer) Get(context.Context, *GetOrderRequest) (
 func (UnimplementedOrdersServiceServer) List(context.Context, *ListOrderRequest) (*ListOrderResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
 }
-func (UnimplementedOrdersServiceServer) Update(context.Context, *UpdateOrderRequest) (*UpdateOrderResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
+func (UnimplementedOrdersServiceServer) Cancel(context.Context, *CancelOrderRequest) (*CancelOrderResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Cancel not implemented")
 }
 func (UnimplementedOrdersServiceServer) Delete(context.Context, *DeleteOrderRequest) (*DeleteOrderResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
@@ -188,20 +188,20 @@ func _OrdersService_List_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OrdersService_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateOrderRequest)
+func _OrdersService_Cancel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CancelOrderRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(OrdersServiceServer).Update(ctx, in)
+		return srv.(OrdersServiceServer).Cancel(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: OrdersService_Update_FullMethodName,
+		FullMethod: OrdersService_Cancel_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrdersServiceServer).Update(ctx, req.(*UpdateOrderRequest))
+		return srv.(OrdersServiceServer).Cancel(ctx, req.(*CancelOrderRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -244,8 +244,8 @@ var OrdersService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _OrdersService_List_Handler,
 		},
 		{
-			MethodName: "Update",
-			Handler:    _OrdersService_Update_Handler,
+			MethodName: "Cancel",
+			Handler:    _OrdersService_Cancel_Handler,
 		},
 		{
 			MethodName: "Delete",
