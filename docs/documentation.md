@@ -8,25 +8,35 @@
 
 ## Endpoints
 
-| URL            | Method     | Request Body                                  | Request header | Response Body                           | Description                                                       |
-|----------------|------------|-----------------------------------------------|----------------|-----------------------------------------|-------------------------------------------------------------------|
-| /auth/signup   | **POST**   | username<br>  address<br> password            |                | id<br> username<br> address<br> regdate | Register user                                                     |
-| /auth/login    | **POST**   | username<br> password                         |                | accessToken<br> refreshToken            | Login user and get pair of tokens                                 |
-| /auth/refresh  | **POST**   | refreshToken                                  |                | accessToken                             | Refresh access token                                              |
-| /user          | **GET**    |                                               | accessToken    | `User`                                  | View data of your account                                         |
-| /user/1        | **GET**    |                                               | accessToken    | `User`                                  | View data of user with id=1                                       |
-| /user          | **PATCH**  | username<br> address<br> password<br> regdate | accessToken    | `User`                                  | Change some info of your account                                  |
-| /user          | **DELETE** |                                               | accessToken    | `User`                                  | Delete your account                                               |
-| /order         | **POST**   | coffee<br> topping<br> sugar                  | accessToken    | `Order`                                 | Create new order with specified coffees                           |
-| /order/1       | **GET**    |                                               | accessToken    | `Order`                                 | View your certain order                                           |
-| /order?shift=0 | **GET**    |                                               | accessToken    | [5]`Order`                              | View some your orders. Returns 5 orders starting from the "shift" |
-| /order/1       | **PATCH**  |                                               | accessToken    | `Order`                                 | Cancel your order (if order status hasn't been "DELIVERED")       |
-| /order/1       | **DELETE** |                                               | accessToken    | `Order`                                 | Delete your certain order                                         |
+| URL            | Method     | Request Body                                  | Request header | Response Body                | Description                                                       |
+|----------------|------------|-----------------------------------------------|----------------|------------------------------|-------------------------------------------------------------------|
+| /auth/signup   | **POST**   | username<br> address<br> password             |                | `User`                       | Register user                                                     |
+| /auth/login    | **POST**   | username<br> password                         |                | accessToken<br> refreshToken | Login user and get pair of tokens                                 |
+| /auth/refresh  | **POST**   | refreshToken                                  |                | accessToken                  | Refresh access token                                              |
+| /user          | **GET**    |                                               | accessToken    | `User`                       | View data of your account                                         |
+| /user/1        | **GET**    |                                               | accessToken    | `User`                       | View data of user with id=1                                       |
+| /user          | **PATCH**  | username<br> address<br> password<br> regdate | accessToken    | `User`                       | Change some info of your account                                  |
+| /user          | **DELETE** |                                               | accessToken    | `User`                       | Delete your account                                               |
+| /order         | **POST**   | coffee<br> topping<br> sugar                  | accessToken    | `Order`                      | Create new order with specified coffees                           |
+| /order/1       | **GET**    |                                               | accessToken    | `Order`                      | View your certain order                                           |
+| /order?shift=0 | **GET**    |                                               | accessToken    | [5]`Order`                   | View some your orders. Returns 5 orders starting from the "shift" |
+| /order/1       | **PATCH**  |                                               | accessToken    | `Order`                      | Cancel your order (if order status hasn't been "DELIVERED")       |
+| /order/1       | **DELETE** |                                               | accessToken    | `Order`                      | Delete your certain order                                         |
+
+<table>
+<tr><td>
 
 | Mark    | Fileds                                                                       |
 |---------|------------------------------------------------------------------------------|
 | `User`  | id<br> username<br> address<br> regdate                                      |
+
+</td><td>
+
+| Mark    | Fileds                                                                       |
+|---------|------------------------------------------------------------------------------|
 | `Order` | id<br> userid<br> status<br> coffee<br> topping<br> sugar<br> total<br> date |
+
+</td></tr> </table>
 
 ## Auth
 

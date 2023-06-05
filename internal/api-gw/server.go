@@ -44,15 +44,14 @@ func Start() {
 	}
 	// Handlers
 	router := gin.Default()
-	routerAuth := router.Group("/auth", gin.WrapF(authMux.ServeHTTP))
-	routerAuth.Any("")
-	routerAuth.Any("*any")
-	routerUsers := router.Group("/user", gin.WrapF(usersMux.ServeHTTP), Auth())
-	routerUsers.Any("")
-	routerUsers.Any("*any")
-	routerOrders := router.Group("/order", gin.WrapF(ordersMux.ServeHTTP), Auth())
-	routerOrders.Any("")
-	routerOrders.Any("*any")
+	registerMux := func(url string, mux *runtime.ServeMux) {
+		routerAuth := router.Group(url, gin.WrapF(mux.ServeHTTP))
+		routerAuth.Any("")
+		routerAuth.Any("*any")
+	}
+	registerMux("/auth", authMux)
+	registerMux("/user", usersMux)
+	registerMux("/order", ordersMux)
 	// Start server
 	if err := router.Run(":"+restPort); err != nil {
         log.Fatal(err)

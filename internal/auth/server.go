@@ -22,7 +22,8 @@ func Start() {
 
 	// Start gRPC server
 	grpcServer := grpc.NewServer()
-	pb.RegisterAuthServiceServer(grpcServer, &AuthServiceServer{})
+	authService := AuthServiceServer{}
+	pb.RegisterAuthServiceServer(grpcServer, &authService)
 	lis, err := net.Listen("tcp", "localhost:"+grpcPort)
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)

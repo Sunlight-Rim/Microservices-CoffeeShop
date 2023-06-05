@@ -2,6 +2,7 @@ package main
 
 import (
 	gw "coffeeshop/internal/api-gw"
+	"coffeeshop/internal/auth"
 	"coffeeshop/internal/orders"
 	"coffeeshop/internal/users"
 )
@@ -9,7 +10,8 @@ import (
 ///	ENTRY POINT
 
 func main() {
-	orders.Start()
+	auth.Start()
 	users.Start()
+	orders.Start()
 	gw.Start()
 }
