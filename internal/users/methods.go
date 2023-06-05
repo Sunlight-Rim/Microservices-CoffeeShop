@@ -25,16 +25,21 @@ func getUserID(ctx *context.Context) uint32 {
 	return payload["id"]
 }
 
-func (s *UsersServiceServer) GetUser(ctx context.Context, empty *empty.Empty) (*pb.GetUserResponse, error) {
+func (s *UsersServiceServer) GetMe(ctx context.Context, empty *empty.Empty) (*pb.GetMeResponse, error) {
 	user := &pb.User{
 		Id: getUserID(&ctx),
 	}
 	var date time.Time
-	s.db.QueryRow("SELECT username, address, date FROM user WHERE userID == $1",
-					 user.Id).Scan(&user.Username, &user.Address, &date)
+	s.db.QueryRow(
+		`SELECT username, address, date FROM user WHERE userID == $1`,
+		user.Id).Scan(&user.Username, &user.Address, &date)
 	user.Regdate = timestamppb.New(date)
-	return &pb.GetUserResponse{User: user}, nil
+	return &pb.GetMeResponse{User: user}, nil
 }
+
+// func (s *UsersServiceServer) GetOther(context.Context, *pb.GetOtherUserRequest) (*pb.GetOtherUserResponse, error) {
+// 	return &pb.GetOtherUserResponse{}, nil
+// }
 
 // func (s *UsersServiceServer) Create(ctx context.Context, in *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
 // 	// Validate input

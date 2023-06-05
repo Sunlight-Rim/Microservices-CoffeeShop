@@ -11,6 +11,7 @@ import (
 /// gRPC SERVER
 
 const grpcPort = "50050" // TODO: move to config
+const usersPort = "50051" // TODO: move to config
 
 type AuthServiceServer struct {
 	pb.UnimplementedAuthServiceServer
@@ -18,7 +19,7 @@ type AuthServiceServer struct {
 
 func Start() {
 	// Connect to DB
-	
+
 	// Start gRPC server
 	grpcServer := grpc.NewServer()
 	pb.RegisterAuthServiceServer(grpcServer, &AuthServiceServer{})

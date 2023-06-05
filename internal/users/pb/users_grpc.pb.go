@@ -33,7 +33,7 @@ const (
 type UsersServiceClient interface {
 	Create(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error)
 	// Create() calls from Auth service
-	GetMe(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*GetUserResponse, error)
+	GetMe(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*GetMeResponse, error)
 	GetOther(ctx context.Context, in *GetOtherUserRequest, opts ...grpc.CallOption) (*GetOtherUserResponse, error)
 	Update(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*UpdateUserResponse, error)
 	Delete(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*DeleteUserResponse, error)
@@ -56,8 +56,8 @@ func (c *usersServiceClient) Create(ctx context.Context, in *CreateUserRequest, 
 	return out, nil
 }
 
-func (c *usersServiceClient) GetMe(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*GetUserResponse, error) {
-	out := new(GetUserResponse)
+func (c *usersServiceClient) GetMe(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*GetMeResponse, error) {
+	out := new(GetMeResponse)
 	err := c.cc.Invoke(ctx, UsersService_GetMe_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -98,7 +98,7 @@ func (c *usersServiceClient) Delete(ctx context.Context, in *DeleteUserRequest, 
 type UsersServiceServer interface {
 	Create(context.Context, *CreateUserRequest) (*CreateUserResponse, error)
 	// Create() calls from Auth service
-	GetMe(context.Context, *empty.Empty) (*GetUserResponse, error)
+	GetMe(context.Context, *empty.Empty) (*GetMeResponse, error)
 	GetOther(context.Context, *GetOtherUserRequest) (*GetOtherUserResponse, error)
 	Update(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error)
 	Delete(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error)
@@ -112,7 +112,7 @@ type UnimplementedUsersServiceServer struct {
 func (UnimplementedUsersServiceServer) Create(context.Context, *CreateUserRequest) (*CreateUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
-func (UnimplementedUsersServiceServer) GetMe(context.Context, *empty.Empty) (*GetUserResponse, error) {
+func (UnimplementedUsersServiceServer) GetMe(context.Context, *empty.Empty) (*GetMeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMe not implemented")
 }
 func (UnimplementedUsersServiceServer) GetOther(context.Context, *GetOtherUserRequest) (*GetOtherUserResponse, error) {

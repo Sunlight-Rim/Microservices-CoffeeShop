@@ -6,9 +6,9 @@ services:
   auth:
     url: "/auth"
     port: 50050
-  users:
-    url: "/user"
-    port: 50051
   orders:
     url: "/order"
+    port: 50051
+  users:
+    url: "/user"
     port: 50052

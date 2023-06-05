@@ -12,7 +12,7 @@ option go_package = ".;users_pb";
 service UsersService {
     rpc Create (CreateUserRequest) returns (CreateUserResponse);
     // Create() calls from Auth service
-    rpc GetMe (google.protobuf.Empty) returns (GetUserResponse) {
+    rpc GetMe (google.protobuf.Empty) returns (GetMeResponse) {
         option (google.api.http) = {
             get: "/user"
         };
@@ -57,7 +57,7 @@ message CreateUserResponse {
 
 // Get me
 
-message GetUserResponse {
+message GetMeResponse {
     User user = 1;
 }
 

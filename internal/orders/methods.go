@@ -31,15 +31,18 @@ func (s *OrdersServiceServer) Create(ctx context.Context, in *pb.CreateOrderRequ
 		return nil, errors.New("you didn't specify any coffee")
 	}
 	// Create order
-	order := &pb.Order{
-		Userid:  getUserID(&ctx),
-		Coffee:  in.GetCoffee(),
-		Topping: in.GetTopping(),
-		Sugar:   in.GetSugar(),
-		Date:    timestamppb.New(time.Now()),
-		Status:  pb.Order_Status(0),
-	}
-	var coffeeID, toppingID uint32 = 1, 1
+	var (
+		coffeeID  uint32
+		toppingID uint32 = 1
+		order            = &pb.Order{
+			Userid:  getUserID(&ctx),
+			Coffee:  in.GetCoffee(),
+			Topping: in.GetTopping(),
+			Sugar:   in.GetSugar(),
+			Date:    timestamppb.New(time.Now()),
+			Status:  pb.Order_Status(0),
+		}
+	)
 	// Sum coffee price & get id
 	if err := s.db.QueryRow(
 		`SELECT coffeeID, price FROM coffee WHERE name == $1;`,
@@ -74,13 +77,13 @@ func (s *OrdersServiceServer) Get(ctx context.Context, in *pb.GetOrderRequest) (
 	if in.GetId() == 0 {
 		return nil, errors.New("order ID is wrong")
 	}
-	order := &pb.Order{
-		Id: in.GetId(),
-		Userid: getUserID(&ctx),
-	}
 	var (
-		date 		 time.Time
 		toppingPrice float32
+		date         time.Time
+		order        = &pb.Order{
+			Id:     in.GetId(),
+			Userid: getUserID(&ctx),
+		}
 	)
 	if err := s.db.QueryRow(
 		`SELECT coffee.name, coffee.price, topping.name, topping.price, sugar, status, date
@@ -114,14 +117,14 @@ func (s *OrdersServiceServer) List(ctx context.Context, in *pb.ListOrderRequest)
 	}
 	defer rows.Close()
 	var (
-		date   		 time.Time
-		orders 		 []*pb.Order
+		date         time.Time
+		orders       []*pb.Order
 		toppingPrice float32
 	)
 	for rows.Next() {
 		order := pb.Order{Userid: userID}
 		rows.Scan(&order.Id, &order.Coffee, &order.Total, &order.Topping,
-				  &toppingPrice, &order.Sugar, &order.Status, &date)
+			&toppingPrice, &order.Sugar, &order.Status, &date)
 		order.Date = timestamppb.New(date)
 		orders = append(orders, &order)
 	}
