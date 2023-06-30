@@ -1,6 +1,7 @@
 package users
 
 import (
+	configuration "coffeeshop/config"
 	pb "coffeeshop/internal/users/pb"
 	"database/sql"
 
@@ -13,24 +14,22 @@ import (
 
 /// gRPC SERVER
 
-const grpcPort = "50052" // TODO: move to config
-
 type UsersServiceServer struct {
 	pb.UnimplementedUsersServiceServer
 	db *sql.DB
 }
 
-func Start() {
+func Start(config *configuration.Config) {
 	// Connect to DB
-	db, err := sql.Open("sqlite3", "internal/users/database/users.db")
+	db, err := sql.Open("sqlite3", config.Services["users"].DB)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
 	// Start gRPC server
 	grpcServer := grpc.NewServer()
-	userService := UsersServiceServer{db: db}
-	pb.RegisterUsersServiceServer(grpcServer, &userService)
-	lis, err := net.Listen("tcp", "localhost:"+grpcPort)
+	UsersService := UsersServiceServer{db: db}
+	pb.RegisterUsersServiceServer(grpcServer, &UsersService)
+	lis, err := net.Listen("tcp", config.Host+":"+config.Services["users"].Port)
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}

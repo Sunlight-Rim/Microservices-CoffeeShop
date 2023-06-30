@@ -25,12 +25,12 @@ service OrdersService {
         //     };
         // };
     };
-    rpc Get (GetOrderRequest) returns (GetOrderResponse) {
+    rpc GetOne (GetOneOrderRequest) returns (GetOneOrderResponse) {
         option (google.api.http) = {
             get: "/order/{id}"
         };
     };
-    rpc List (ListOrderRequest) returns (ListOrderResponse) {
+    rpc GetSome (GetSomeOrderRequest) returns (GetSomeOrderResponse) {
         option (google.api.http) = {
             get: "/order"
         };
@@ -75,23 +75,23 @@ message CreateOrderResponse {
     Order order = 1;
 }
 
-// Get
+// Get One
 
-message GetOrderRequest {
+message GetOneOrderRequest {
     uint32 id = 1;
 }
 
-message GetOrderResponse {
+message GetOneOrderResponse {
     Order order = 1;
 }
 
-// List
+// Get Some
 // Returns only 5 orders per request
-message ListOrderRequest {
+message GetSomeOrderRequest {
     uint32 shift = 1;
 }
 
-message ListOrderResponse {
+message GetSomeOrderResponse {
     repeated Order orders = 1;
 }
 

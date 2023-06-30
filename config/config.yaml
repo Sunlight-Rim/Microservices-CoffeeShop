@@ -1,14 +1,17 @@
 host: "localhost"
-port: 8080
+port: "8080"
 jwtKey: "verySecretKey"
 
 services:
   auth:
     url: "/auth"
-    port: 50050
+    port: "50050"
+    db: "" # TODO
   orders:
     url: "/order"
-    port: 50051
+    port: "50051"
+    db: "internal/orders/database/orders.db"
   users:
     url: "/user"
-    port: 50052
+    port: "50052"
+    db: "internal/users/database/users.db"

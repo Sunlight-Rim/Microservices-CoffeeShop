@@ -1,6 +1,7 @@
 package main
 
 import (
+	configuration "coffeeshop/config"
 	"crypto/sha1"
 	"database/sql"
 	"encoding/hex"
@@ -13,32 +14,31 @@ import (
 /// DB MANAGER
 // A script for creating and filling a databases
 
-const ordersPath string = "internal/orders/database/orders.db"
-const usersPath string = "internal/users/database/users.db"
+// ORDERS DB
 
-func ordersManage() error {
+func ordersManage(dbPath string) error {
 	// Remove DataBase
-	if err := os.Remove(ordersPath); err != nil {
-		return err
+	if err := os.Remove(dbPath); err != nil {
+		log.Println("Orders DB already no exists")
 	}
 
 	// Create DataBase
-	file, err := os.Create(ordersPath)
+	file, err := os.Create(dbPath)
 	if err != nil {
 		return err
 	}
 	file.Close()
-	log.Println("Orders DataBase created successfully!")
+	log.Println("Orders DB created successfully!")
 
 	// Connect to DataBase
-	db, err := sql.Open("sqlite3", ordersPath)
+	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
 	// Create Tables
-	createTables :=
+	createTables := 
 		`CREATE TABLE coffee (
 			coffeeID INTEGER PRIMARY KEY AUTOINCREMENT,
 			name VARCHAR(60) UNIQUE NOT NULL,
@@ -57,6 +57,7 @@ func ordersManage() error {
 			sugar INTEGER DEFAULT 1,
 			status INTEGER DEFAULT 0,
 			date TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+			
 			FOREIGN KEY (coffeeID) REFERENCES coffee(coffeeID),
 			FOREIGN KEY (toppingID) REFERENCES topping(toppingID)
 		);`
@@ -69,7 +70,6 @@ func ordersManage() error {
 	insertRecords :=
 		`INSERT INTO coffee(name, price) VALUES ('Espresso', 3.0);
 		INSERT INTO coffee(name, price) VALUES ('Americano', 3.5);
-		INSERT INTO topping(name, price) VALUES ('', 0.0);
 		INSERT INTO topping(name, price) VALUES ('Banana', 0.5);
 		INSERT INTO topping(name, price) VALUES ('Strawberry', 0.5);
 		
@@ -80,34 +80,35 @@ func ordersManage() error {
 		return err
 	}
 	rows, _ := res.RowsAffected()
-
 	log.Printf("Orders tables filled successfully with %v rows!\n", rows)
 	return nil
 }
 
-func usersManage() error {
+// USERS DB
+
+func usersManage(dbPath string) error {
 	// Remove DataBase
-	if err := os.Remove(usersPath); err != nil {
-		return err
+	if err := os.Remove(dbPath); err != nil {
+		log.Println("Users DB already no exists")
 	}
 
 	// Create DataBase
-	file, err := os.Create(usersPath)
+	file, err := os.Create(dbPath)
 	if err != nil {
 		return err
 	}
 	file.Close()
-	log.Println("User database created successfully!")
+	log.Println("Users DB created successfully!")
 
 	// Connect to DataBase
-	db, err := sql.Open("sqlite3", usersPath)
+	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
 	// Create Tables
-	createTables :=
+	createTables := 
 		`CREATE TABLE user (
 			userID INTEGER PRIMARY KEY AUTOINCREMENT,
 			username VARCHAR(30) NOT NULL,
@@ -118,7 +119,7 @@ func usersManage() error {
 	if _, err := db.Exec(createTables); err != nil {
 		return err
 	}
-	log.Println("User tables created successfully!")
+	log.Println("Users tables created successfully!")
 
 	// Fill tables
 	insertRecords :=
@@ -134,15 +135,17 @@ func usersManage() error {
 		return err
 	}
 	rows, _ := res.RowsAffected()
-	log.Printf("User tables filled successfully with %v rows!\n", rows)
+	log.Printf("Users tables filled successfully with %v rows!\n", rows)
 	return nil
 }
 
 func main() {
-	if err := ordersManage(); err != nil {
-		log.Printf("%v", err)
+	config := configuration.New()
+
+	if err := ordersManage(config.Services["orders"].DB); err != nil {
+		log.Println(err)
 	}
-	if err := usersManage(); err != nil {
-		log.Printf("%v", err)
+	if err := usersManage(config.Services["users"].DB); err != nil {
+		log.Println(err)
 	}
 }

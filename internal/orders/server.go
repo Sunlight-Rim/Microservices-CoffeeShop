@@ -1,6 +1,7 @@
 package orders
 
 import (
+	configuration "coffeeshop/config"
 	pb "coffeeshop/internal/orders/pb"
 	"database/sql"
 
@@ -13,16 +14,14 @@ import (
 
 /// gRPC SERVER
 
-const grpcPort = "50051" // TODO: move to config
-
 type OrdersServiceServer struct {
 	pb.UnimplementedOrdersServiceServer
 	db *sql.DB
 }
 
-func Start() {
+func Start(config *configuration.Config) {
 	// Connect to DB
-	db, err := sql.Open("sqlite3", "internal/orders/database/orders.db")
+	db, err := sql.Open("sqlite3", config.Services["orders"].DB)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
@@ -30,7 +29,7 @@ func Start() {
 	grpcServer := grpc.NewServer()
 	ordersService := OrdersServiceServer{db: db}
 	pb.RegisterOrdersServiceServer(grpcServer, &ordersService)
-	lis, err := net.Listen("tcp", "localhost:"+grpcPort)
+	lis, err := net.Listen("tcp", config.Host+":"+config.Services["orders"].Port)
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}

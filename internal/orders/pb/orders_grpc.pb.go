@@ -19,11 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	OrdersService_Create_FullMethodName = "/orders.OrdersService/Create"
-	OrdersService_Get_FullMethodName    = "/orders.OrdersService/Get"
-	OrdersService_List_FullMethodName   = "/orders.OrdersService/List"
-	OrdersService_Cancel_FullMethodName = "/orders.OrdersService/Cancel"
-	OrdersService_Delete_FullMethodName = "/orders.OrdersService/Delete"
+	OrdersService_Create_FullMethodName  = "/orders.OrdersService/Create"
+	OrdersService_GetOne_FullMethodName  = "/orders.OrdersService/GetOne"
+	OrdersService_GetSome_FullMethodName = "/orders.OrdersService/GetSome"
+	OrdersService_Cancel_FullMethodName  = "/orders.OrdersService/Cancel"
+	OrdersService_Delete_FullMethodName  = "/orders.OrdersService/Delete"
 )
 
 // OrdersServiceClient is the client API for OrdersService service.
@@ -31,8 +31,8 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type OrdersServiceClient interface {
 	Create(ctx context.Context, in *CreateOrderRequest, opts ...grpc.CallOption) (*CreateOrderResponse, error)
-	Get(ctx context.Context, in *GetOrderRequest, opts ...grpc.CallOption) (*GetOrderResponse, error)
-	List(ctx context.Context, in *ListOrderRequest, opts ...grpc.CallOption) (*ListOrderResponse, error)
+	GetOne(ctx context.Context, in *GetOneOrderRequest, opts ...grpc.CallOption) (*GetOneOrderResponse, error)
+	GetSome(ctx context.Context, in *GetSomeOrderRequest, opts ...grpc.CallOption) (*GetSomeOrderResponse, error)
 	Cancel(ctx context.Context, in *CancelOrderRequest, opts ...grpc.CallOption) (*CancelOrderResponse, error)
 	Delete(ctx context.Context, in *DeleteOrderRequest, opts ...grpc.CallOption) (*DeleteOrderResponse, error)
 }
@@ -54,18 +54,18 @@ func (c *ordersServiceClient) Create(ctx context.Context, in *CreateOrderRequest
 	return out, nil
 }
 
-func (c *ordersServiceClient) Get(ctx context.Context, in *GetOrderRequest, opts ...grpc.CallOption) (*GetOrderResponse, error) {
-	out := new(GetOrderResponse)
-	err := c.cc.Invoke(ctx, OrdersService_Get_FullMethodName, in, out, opts...)
+func (c *ordersServiceClient) GetOne(ctx context.Context, in *GetOneOrderRequest, opts ...grpc.CallOption) (*GetOneOrderResponse, error) {
+	out := new(GetOneOrderResponse)
+	err := c.cc.Invoke(ctx, OrdersService_GetOne_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *ordersServiceClient) List(ctx context.Context, in *ListOrderRequest, opts ...grpc.CallOption) (*ListOrderResponse, error) {
-	out := new(ListOrderResponse)
-	err := c.cc.Invoke(ctx, OrdersService_List_FullMethodName, in, out, opts...)
+func (c *ordersServiceClient) GetSome(ctx context.Context, in *GetSomeOrderRequest, opts ...grpc.CallOption) (*GetSomeOrderResponse, error) {
+	out := new(GetSomeOrderResponse)
+	err := c.cc.Invoke(ctx, OrdersService_GetSome_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -95,8 +95,8 @@ func (c *ordersServiceClient) Delete(ctx context.Context, in *DeleteOrderRequest
 // for forward compatibility
 type OrdersServiceServer interface {
 	Create(context.Context, *CreateOrderRequest) (*CreateOrderResponse, error)
-	Get(context.Context, *GetOrderRequest) (*GetOrderResponse, error)
-	List(context.Context, *ListOrderRequest) (*ListOrderResponse, error)
+	GetOne(context.Context, *GetOneOrderRequest) (*GetOneOrderResponse, error)
+	GetSome(context.Context, *GetSomeOrderRequest) (*GetSomeOrderResponse, error)
 	Cancel(context.Context, *CancelOrderRequest) (*CancelOrderResponse, error)
 	Delete(context.Context, *DeleteOrderRequest) (*DeleteOrderResponse, error)
 	mustEmbedUnimplementedOrdersServiceServer()
@@ -109,11 +109,11 @@ type UnimplementedOrdersServiceServer struct {
 func (UnimplementedOrdersServiceServer) Create(context.Context, *CreateOrderRequest) (*CreateOrderResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
-func (UnimplementedOrdersServiceServer) Get(context.Context, *GetOrderRequest) (*GetOrderResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+func (UnimplementedOrdersServiceServer) GetOne(context.Context, *GetOneOrderRequest) (*GetOneOrderResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetOne not implemented")
 }
-func (UnimplementedOrdersServiceServer) List(context.Context, *ListOrderRequest) (*ListOrderResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
+func (UnimplementedOrdersServiceServer) GetSome(context.Context, *GetSomeOrderRequest) (*GetSomeOrderResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSome not implemented")
 }
 func (UnimplementedOrdersServiceServer) Cancel(context.Context, *CancelOrderRequest) (*CancelOrderResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Cancel not implemented")
@@ -152,38 +152,38 @@ func _OrdersService_Create_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OrdersService_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetOrderRequest)
+func _OrdersService_GetOne_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetOneOrderRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(OrdersServiceServer).Get(ctx, in)
+		return srv.(OrdersServiceServer).GetOne(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: OrdersService_Get_FullMethodName,
+		FullMethod: OrdersService_GetOne_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrdersServiceServer).Get(ctx, req.(*GetOrderRequest))
+		return srv.(OrdersServiceServer).GetOne(ctx, req.(*GetOneOrderRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OrdersService_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListOrderRequest)
+func _OrdersService_GetSome_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSomeOrderRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(OrdersServiceServer).List(ctx, in)
+		return srv.(OrdersServiceServer).GetSome(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: OrdersService_List_FullMethodName,
+		FullMethod: OrdersService_GetSome_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrdersServiceServer).List(ctx, req.(*ListOrderRequest))
+		return srv.(OrdersServiceServer).GetSome(ctx, req.(*GetSomeOrderRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -236,12 +236,12 @@ var OrdersService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _OrdersService_Create_Handler,
 		},
 		{
-			MethodName: "Get",
-			Handler:    _OrdersService_Get_Handler,
+			MethodName: "GetOne",
+			Handler:    _OrdersService_GetOne_Handler,
 		},
 		{
-			MethodName: "List",
-			Handler:    _OrdersService_List_Handler,
+			MethodName: "GetSome",
+			Handler:    _OrdersService_GetSome_Handler,
 		},
 		{
 			MethodName: "Cancel",

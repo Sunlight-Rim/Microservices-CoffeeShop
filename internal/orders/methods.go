@@ -50,7 +50,7 @@ func (s *OrdersServiceServer) Create(ctx context.Context, in *pb.CreateOrderRequ
 		return nil, errors.New("specified coffee type was wrong")
 	}
 	// Sum topping price & get id
-	if order.Topping == "" {
+	if order.Topping != "" {
 		var price float32
 		if err := s.db.QueryRow(
 			`SELECT toppingID, price FROM topping WHERE name == $1;`,
@@ -72,7 +72,7 @@ func (s *OrdersServiceServer) Create(ctx context.Context, in *pb.CreateOrderRequ
 	return &pb.CreateOrderResponse{Order: order}, nil
 }
 
-func (s *OrdersServiceServer) Get(ctx context.Context, in *pb.GetOrderRequest) (*pb.GetOrderResponse, error) {
+func (s *OrdersServiceServer) Get(ctx context.Context, in *pb.GetOneOrderRequest) (*pb.GetOneOrderResponse, error) {
 	// Validate input
 	if in.GetId() == 0 {
 		return nil, errors.New("order ID is wrong")
@@ -98,10 +98,10 @@ func (s *OrdersServiceServer) Get(ctx context.Context, in *pb.GetOrderRequest) (
 	}
 	order.Date = timestamppb.New(date)
 	order.Total += toppingPrice
-	return &pb.GetOrderResponse{Order: order}, nil
+	return &pb.GetOneOrderResponse{Order: order}, nil
 }
 
-func (s *OrdersServiceServer) List(ctx context.Context, in *pb.ListOrderRequest) (*pb.ListOrderResponse, error) {
+func (s *OrdersServiceServer) GetSome(ctx context.Context, in *pb.GetSomeOrderRequest) (*pb.GetSomeOrderResponse, error) {
 	userID := getUserID(&ctx)
 	rows, err := s.db.Query(
 		`SELECT orderID, coffee.name, coffee.price, topping.name, topping.price, sugar, status, date
@@ -128,12 +128,12 @@ func (s *OrdersServiceServer) List(ctx context.Context, in *pb.ListOrderRequest)
 		order.Date = timestamppb.New(date)
 		orders = append(orders, &order)
 	}
-	return &pb.ListOrderResponse{Orders: orders}, nil
+	return &pb.GetSomeOrderResponse{Orders: orders}, nil
 }
 
 func (s *OrdersServiceServer) Cancel(ctx context.Context, in *pb.CancelOrderRequest) (*pb.CancelOrderResponse, error) {
 	// Get changing order
-	getResponce, err := s.Get(ctx, &pb.GetOrderRequest{
+	getResponce, err := s.Get(ctx, &pb.GetOneOrderRequest{
 		Id: in.GetId(),
 	})
 	if err != nil {
@@ -162,7 +162,7 @@ func (s *OrdersServiceServer) Delete(ctx context.Context, in *pb.DeleteOrderRequ
 		return nil, errors.New("order ID is wrong")
 	}
 	// Get deleting order
-	getResponce, err := s.Get(ctx, &pb.GetOrderRequest{
+	getResponce, err := s.Get(ctx, &pb.GetOneOrderRequest{
 		Id: in.GetId(),
 	})
 	if err != nil {
