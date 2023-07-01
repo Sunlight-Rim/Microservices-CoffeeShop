@@ -45,7 +45,7 @@ func (s *OrdersServiceServer) Create(ctx context.Context, in *pb.CreateOrderRequ
 	)
 	// Sum coffee price & get id
 	if err := s.db.QueryRow(
-		`SELECT coffeeID, price FROM coffee WHERE name == $1;`,
+		`SELECT coffeeID, price FROM coffee WHERE name = $1;`,
 		order.Coffee).Scan(&coffeeID, &order.Total); err != nil {
 		return nil, errors.New("specified coffee type was wrong")
 	}
@@ -53,7 +53,7 @@ func (s *OrdersServiceServer) Create(ctx context.Context, in *pb.CreateOrderRequ
 	if order.Topping != "" {
 		var price float32
 		if err := s.db.QueryRow(
-			`SELECT toppingID, price FROM topping WHERE name == $1;`,
+			`SELECT toppingID, price FROM topping WHERE name = $1;`,
 			order.Topping).Scan(&toppingID, &price); err != nil {
 			return nil, errors.New("specified topping type was wrong")
 		}
@@ -88,12 +88,11 @@ func (s *OrdersServiceServer) Get(ctx context.Context, in *pb.GetOneOrderRequest
 	if err := s.db.QueryRow(
 		`SELECT coffee.name, coffee.price, topping.name, topping.price, sugar, status, date
 		FROM order_ INNER JOIN
-			 coffee ON order_.coffeeID == coffee.coffeeID INNER JOIN
-			 topping ON order_.toppingID == topping.toppingID
-		WHERE order_.orderID == $1 AND order_.userID == $2;`,
+			 coffee ON order_.coffeeID = coffee.coffeeID INNER JOIN
+			 topping ON order_.toppingID = topping.toppingID
+		WHERE order_.orderID = $1 AND order_.userID = $2;`,
 		order.Id, order.Userid).Scan(&order.Coffee, &order.Total, &order.Topping,
-									 &toppingPrice, &order.Sugar, &order.Status, &date);
-	err != nil {
+		&toppingPrice, &order.Sugar, &order.Status, &date); err != nil {
 		return nil, err
 	}
 	order.Date = timestamppb.New(date)
@@ -106,9 +105,9 @@ func (s *OrdersServiceServer) GetSome(ctx context.Context, in *pb.GetSomeOrderRe
 	rows, err := s.db.Query(
 		`SELECT orderID, coffee.name, coffee.price, topping.name, topping.price, sugar, status, date
 		FROM order_ INNER JOIN
-			 coffee ON order_.coffeeID == coffee.coffeeID INNER JOIN
-			 topping ON order_.toppingID == topping.toppingID
-		WHERE order_.userID == $1
+			 coffee ON order_.coffeeID = coffee.coffeeID INNER JOIN
+			 topping ON order_.toppingID = topping.toppingID
+		WHERE order_.userID = $1
 		LIMIT 5 OFFSET $2;`,
 		userID, in.GetShift())
 	if err != nil {
@@ -148,7 +147,7 @@ func (s *OrdersServiceServer) Cancel(ctx context.Context, in *pb.CancelOrderRequ
 	}
 	// Change order status to CANCELLED
 	if _, err := s.db.Exec(
-		`UPDATE order_ SET status = 2 WHERE orderID == $1 AND userID == $2;`,
+		`UPDATE order_ SET status = 2 WHERE orderID = $1 AND userID = $2;`,
 		getResponce.Order.Id, getResponce.Order.Userid); err != nil {
 		return nil, err
 	}
@@ -170,7 +169,7 @@ func (s *OrdersServiceServer) Delete(ctx context.Context, in *pb.DeleteOrderRequ
 	}
 	// Delete
 	if _, err := s.db.Exec(
-		`DELETE FROM order_ WHERE orderID == $1 AND userID == $2;`,
+		`DELETE FROM order_ WHERE orderID = $1 AND userID = $2;`,
 		getResponce.Order.Id, getResponce.Order.Userid); err != nil {
 		return nil, err
 	}

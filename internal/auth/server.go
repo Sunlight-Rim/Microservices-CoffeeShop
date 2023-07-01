@@ -16,7 +16,7 @@ import (
 type AuthServiceServer struct {
 	pb.UnimplementedAuthServiceServer
 	users pbUsers.UsersServiceClient // client of Users service
-	redis map[string]uint32
+	db    map[string]uint32
 }
 
 func Start(config *configuration.Config) {
@@ -31,7 +31,7 @@ func Start(config *configuration.Config) {
 
 	// Start gRPC server
 	grpcServer := grpc.NewServer()
-	authService := AuthServiceServer{redis: redis, users: pbUsers.NewUsersServiceClient(usersConn)}
+	authService := AuthServiceServer{db: redis, users: pbUsers.NewUsersServiceClient(usersConn)}
 	pb.RegisterAuthServiceServer(grpcServer, &authService)
 	lis, err := net.Listen("tcp", config.Host+":"+config.Services["auth"].Port)
 	if err != nil {

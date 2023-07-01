@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion7
 
 const (
 	UsersService_Create_FullMethodName   = "/users.UsersService/Create"
+	UsersService_Login_FullMethodName    = "/users.UsersService/Login"
 	UsersService_GetMe_FullMethodName    = "/users.UsersService/GetMe"
 	UsersService_GetOther_FullMethodName = "/users.UsersService/GetOther"
 	UsersService_Update_FullMethodName   = "/users.UsersService/Update"
@@ -31,9 +32,11 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UsersServiceClient interface {
+	// Local methods
 	Create(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error)
-	// Create() calls from Auth service
-	GetMe(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*GetMeResponse, error)
+	Login(ctx context.Context, in *LoginUserRequest, opts ...grpc.CallOption) (*LoginUserResponse, error)
+	// Public methods
+	GetMe(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*GetMeUserResponse, error)
 	GetOther(ctx context.Context, in *GetOtherUserRequest, opts ...grpc.CallOption) (*GetOtherUserResponse, error)
 	Update(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*UpdateUserResponse, error)
 	Delete(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*DeleteUserResponse, error)
@@ -56,8 +59,17 @@ func (c *usersServiceClient) Create(ctx context.Context, in *CreateUserRequest, 
 	return out, nil
 }
 
-func (c *usersServiceClient) GetMe(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*GetMeResponse, error) {
-	out := new(GetMeResponse)
+func (c *usersServiceClient) Login(ctx context.Context, in *LoginUserRequest, opts ...grpc.CallOption) (*LoginUserResponse, error) {
+	out := new(LoginUserResponse)
+	err := c.cc.Invoke(ctx, UsersService_Login_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *usersServiceClient) GetMe(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*GetMeUserResponse, error) {
+	out := new(GetMeUserResponse)
 	err := c.cc.Invoke(ctx, UsersService_GetMe_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -96,9 +108,11 @@ func (c *usersServiceClient) Delete(ctx context.Context, in *DeleteUserRequest, 
 // All implementations must embed UnimplementedUsersServiceServer
 // for forward compatibility
 type UsersServiceServer interface {
+	// Local methods
 	Create(context.Context, *CreateUserRequest) (*CreateUserResponse, error)
-	// Create() calls from Auth service
-	GetMe(context.Context, *empty.Empty) (*GetMeResponse, error)
+	Login(context.Context, *LoginUserRequest) (*LoginUserResponse, error)
+	// Public methods
+	GetMe(context.Context, *empty.Empty) (*GetMeUserResponse, error)
 	GetOther(context.Context, *GetOtherUserRequest) (*GetOtherUserResponse, error)
 	Update(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error)
 	Delete(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error)
@@ -112,7 +126,10 @@ type UnimplementedUsersServiceServer struct {
 func (UnimplementedUsersServiceServer) Create(context.Context, *CreateUserRequest) (*CreateUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
-func (UnimplementedUsersServiceServer) GetMe(context.Context, *empty.Empty) (*GetMeResponse, error) {
+func (UnimplementedUsersServiceServer) Login(context.Context, *LoginUserRequest) (*LoginUserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
+}
+func (UnimplementedUsersServiceServer) GetMe(context.Context, *empty.Empty) (*GetMeUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMe not implemented")
 }
 func (UnimplementedUsersServiceServer) GetOther(context.Context, *GetOtherUserRequest) (*GetOtherUserResponse, error) {
@@ -151,6 +168,24 @@ func _UsersService_Create_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UsersServiceServer).Create(ctx, req.(*CreateUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UsersService_Login_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LoginUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UsersServiceServer).Login(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UsersService_Login_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UsersServiceServer).Login(ctx, req.(*LoginUserRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -237,6 +272,10 @@ var UsersService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Create",
 			Handler:    _UsersService_Create_Handler,
+		},
+		{
+			MethodName: "Login",
+			Handler:    _UsersService_Login_Handler,
 		},
 		{
 			MethodName: "GetMe",

@@ -10,9 +10,11 @@ option go_package = ".;users_pb";
 
 
 service UsersService {
+    // Local methods
     rpc Create (CreateUserRequest) returns (CreateUserResponse);
-    // Create() calls from Auth service
-    rpc GetMe (google.protobuf.Empty) returns (GetMeResponse) {
+    rpc Login (LoginUserRequest) returns (LoginUserResponse);
+    // Public methods
+    rpc GetMe (google.protobuf.Empty) returns (GetMeUserResponse) {
         option (google.api.http) = {
             get: "/user"
         };
@@ -40,7 +42,6 @@ message User {
     string username = 2;
     string address = 3;
     google.protobuf.Timestamp regdate = 4;
-    // also have password hash in database
 }
 
 // Create
@@ -55,9 +56,20 @@ message CreateUserResponse {
     User user = 1;
 }
 
+// Login
+
+message LoginUserRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message LoginUserResponse {
+    bool access = 1;
+}
+
 // Get me
 
-message GetMeResponse {
+message GetMeUserResponse {
     User user = 1;
 }
 
