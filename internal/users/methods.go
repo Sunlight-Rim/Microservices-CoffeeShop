@@ -44,9 +44,9 @@ func (s *UsersServiceServer) Create(ctx context.Context, in *pb.CreateUserReques
 	// Check if name is already exist
 	var id int64
 	if s.db.QueryRow(
-		`SELECT id FROM users WHERE username = $1`,
+		`SELECT userID FROM user WHERE username = $1`,
 		in.GetUsername()).Scan(&id); id != 0 {
-		return nil, errors.New("this username is already taken")
+		return nil, errors.New("this username is already exists")
 	}
 	// Fill a new row
 	regdate := time.Now()
@@ -60,7 +60,7 @@ func (s *UsersServiceServer) Create(ctx context.Context, in *pb.CreateUserReques
 	hasher.Write([]byte(in.GetPassword()))
 	// Insert to DB
 	res, err := s.db.Exec(
-		`INSERT INTO users (username, password, address, reg_date, order_ids) VALUES ($1, $2, $3, $4, '')`,
+		`INSERT INTO user (username, passwordHash, address, date) VALUES ($1, $2, $3, $4)`,
 		user.Username, hex.EncodeToString(hasher.Sum(nil)), user.Address, regdate)
 	if err != nil {
 		log.Printf("DB request error: %v", err)
@@ -77,17 +77,16 @@ func (s *UsersServiceServer) Login(ctx context.Context, in *pb.LoginUserRequest)
 		return nil, errors.New("enter correct username")
 	}
 	// Login by username
-	var password string
+	var passwordHash string
 	if s.db.QueryRow(
-		`SELECT password FROM users WHERE username = $1`,
-		in.GetUsername()).Scan(&password); password == "" {
+		`SELECT passwordHash FROM user WHERE username = $1`,
+		in.GetUsername()).Scan(&passwordHash); passwordHash == "" {
 		return nil, errors.New("username is wrong")
 	}
-	// Hash the pass
+	// Login by pass
 	hasher := sha1.New()
 	hasher.Write([]byte(in.GetPassword()))
-	// Login by pass
-	if password != hex.EncodeToString(hasher.Sum(nil)) {
+	if passwordHash != hex.EncodeToString(hasher.Sum(nil)) {
 		return nil, errors.New("password is wrong")
 	}
 	return &pb.LoginUserResponse{Access: true}, nil
@@ -98,9 +97,11 @@ func (s *UsersServiceServer) GetMe(ctx context.Context, empty *empty.Empty) (*pb
 		Id: getUserID(&ctx),
 	}
 	var date time.Time
-	s.db.QueryRow(
+	if err := s.db.QueryRow(
 		`SELECT username, address, date FROM user WHERE userID = $1`,
-		user.Id).Scan(&user.Username, &user.Address, &date)
+		user.Id).Scan(&user.Username, &user.Address, &date); err != nil {
+		return nil, errors.New("specified id is wrong")
+	}
 	user.Regdate = timestamppb.New(date)
 	return &pb.GetMeUserResponse{User: user}, nil
 }

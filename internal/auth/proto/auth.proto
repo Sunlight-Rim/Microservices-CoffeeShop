@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package auth;
 
+import "google/protobuf/timestamp.proto";
 import "internal/auth/proto/annotations.proto";
 
 option go_package = ".;auth_pb";
@@ -28,6 +29,13 @@ service AuthService {
     };
 }
 
+message User {
+    uint32 id = 1;
+    string username = 2;
+    string address = 3;
+    google.protobuf.Timestamp regdate = 4;
+}
+
 // Signup
 
 message SignupAuthRequest {
@@ -37,10 +45,7 @@ message SignupAuthRequest {
 }
 
 message SignupAuthResponse {
-    uint32 id = 1;
-    string username = 2;
-    string password = 3;
-    string address = 4;
+    User user = 1;
 }
 
 // Login
