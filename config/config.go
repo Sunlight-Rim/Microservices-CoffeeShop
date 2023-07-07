@@ -22,8 +22,8 @@ type Config struct {
 	Services map[string]Service `yaml:"services"`
 }
 
-func New() (config *Config) {
-	f, err := os.ReadFile("config/config.yaml")
+func New(path string) (config *Config) {
+	f, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatalf("Error in open config file: %v", err)
 	}

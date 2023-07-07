@@ -1,25 +1,17 @@
 package auth
 
 import (
-	pb "coffeeshop/internal/auth/pb"
-	users_pb "coffeeshop/internal/users/pb"
-	"context"
+	pb "coffeeshop/internal/auth/grpc/pb"
 )
 
-func (s *AuthServiceServer) Signup(ctx context.Context, in *pb.SignupAuthRequest) (*pb.SignupAuthResponse, error) {
-	// Use the Users service to create new user
-	creationResp, err := s.users.Create(ctx, &users_pb.CreateUserRequest{
-		Username: in.GetUsername(),
-		Address:  in.GetAddress(),
-		Password: in.GetPassword(),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return &pb.SignupAuthResponse{User: &pb.User{
-		Id:       creationResp.User.GetId(),
-		Username: creationResp.User.GetUsername(),
-		Address:  creationResp.User.GetAddress(),
-		Regdate:  creationResp.User.GetRegdate(),
-	}}, nil
+/// BUSINESS LOGIC LAYER
+
+func Signup(username, password, address string, createUser func(username, password, address string) (UserGetter, error)) (*pb.User, error) {
+	createdUser, err := createUser(username, password, address)
+	return &pb.User{
+		Id:       createdUser.GetId(),
+		Username: createdUser.GetUsername(),
+		Address:  createdUser.GetAddress(),
+		Regdate:  createdUser.GetRegdate(),
+	}, err
 }

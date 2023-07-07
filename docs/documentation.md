@@ -8,20 +8,20 @@
 
 ## Endpoints
 
-| URL            | Method     | Request Body                                  | Request header | Response Body                | Description                                                       |
-|----------------|------------|-----------------------------------------------|----------------|------------------------------|-------------------------------------------------------------------|
-| /auth/signup   | **POST**   | username<br> address<br> password             |                | `User`                       | Register user                                                     |
-| /auth/login    | **POST**   | username<br> password                         |                | accessToken<br> refreshToken | Login user and get pair of tokens                                 |
-| /auth/refresh  | **POST**   | refreshToken                                  |                | accessToken                  | Refresh access token                                              |
-| /user          | **GET**    |                                               | accessToken    | `User`                       | View data of your account                                         |
-| /user/1        | **GET**    |                                               | accessToken    | `User`                       | View data of user with id=1                                       |
-| /user          | **PATCH**  | username<br> address<br> password<br> regdate | accessToken    | `User`                       | Change some info of your account                                  |
-| /user          | **DELETE** |                                               | accessToken    | `User`                       | Delete your account                                               |
-| /order         | **POST**   | coffee<br> topping<br> sugar                  | accessToken    | `Order`                      | Create new order with specified coffees                           |
-| /order/1       | **GET**    |                                               | accessToken    | `Order`                      | View your certain order                                           |
-| /order?shift=0 | **GET**    |                                               | accessToken    | [5]`Order`                   | View some your orders. Returns 5 orders starting from the "shift" |
-| /order/1       | **PATCH**  |                                               | accessToken    | `Order`                      | Cancel your order (if order status hasn't been "DELIVERED")       |
-| /order/1       | **DELETE** |                                               | accessToken    | `Order`                      | Delete your certain order                                         |
+| **Function** | URL                     | Method | Request Body                                  | Request header | Response Body                | Description                                                       |
+|--------------|-------------------------|--------|-----------------------------------------------|----------------|------------------------------|-------------------------------------------------------------------|
+| **Signup**   | /auth/signup            | POST   | username<br> address<br> password             |                | `User`                       | Register user                                                     |
+| **Login**    | /auth/login             | POST   | username<br> password                         |                | accessToken<br> refreshToken | Login user and get pair of tokens                                 |
+| **Refresh**  | /auth/refresh           | POST   | refreshToken                                  |                | accessToken                  | Refresh access token                                              |
+| **GetMe**    | /user                   | GET    |                                               | accessToken    | `User`                       | View data of your account                                         |
+| **GetOther** | /user/\<nickname\>      | GET    |                                               | accessToken    | `User`                       | View data of user with id=1                                       |
+| **Update**   | /user                   | PATCH  | username<br> address<br> password<br> regdate | accessToken    | `User`                       | Change some info of your account                                  |
+| **Delete**   | /user                   | DELETE |                                               | accessToken    | `User`                       | Delete your account                                               |
+| **Create**   | /order                  | POST   | coffee<br> topping<br> sugar                  | accessToken    | `Order`                      | Create new order with specified coffees                           |
+| **GetOne**   | /order/\<id\>           | GET    |                                               | accessToken    | `Order`                      | View your certain order                                           |
+| **GetSome**  | /order?shift=\<number\> | GET    |                                               | accessToken    | [5]`Order`                   | View some your orders. Returns 5 orders starting from the "shift" |
+| **Cancel**   | /order/\<id\>           | PATCH  |                                               | accessToken    | `Order`                      | Cancel your order (if order status hasn't been "DELIVERED")       |
+| **Delete**   | /order/\<id\>           | DELETE |                                               | accessToken    | `Order`                      | Delete your certain order                                         |
 
 <table>
 <tr><td>

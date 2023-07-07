@@ -21,7 +21,7 @@ service UsersService {
     };
     rpc GetOther (GetOtherUserRequest) returns (GetOtherUserResponse) {
         option (google.api.http) = {
-            get: "/user/{id}"
+            get: "/user/{nickname}"
         };
     };
     rpc Update (UpdateUserRequest) returns (UpdateUserResponse) {
@@ -76,7 +76,7 @@ message GetMeUserResponse {
 // Get other user
 
 message GetOtherUserRequest {
-    uint32 id = 1;
+    string nickname = 1;
 }
 
 message GetOtherUserResponse {

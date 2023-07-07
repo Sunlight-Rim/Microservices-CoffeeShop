@@ -1,8 +1,8 @@
 package orders
 
 import (
-	configuration "coffeeshop/config"
-	pb "coffeeshop/internal/orders/pb"
+	db "coffeeshop/internal/orders/database"
+	pb "coffeeshop/internal/orders/grpc/pb"
 	"database/sql"
 
 	"log"
@@ -12,16 +12,16 @@ import (
 	"google.golang.org/grpc"
 )
 
-/// gRPC SERVER
+/// TRANSPORT LAYER (gRPC)
 
 type OrdersServiceServer struct {
 	pb.UnimplementedOrdersServiceServer
 	db *sql.DB
 }
 
-func Start(config *configuration.Config) {
+func Start(host, port, dbPath string) {
 	// Connect to DB
-	db, err := sql.Open("sqlite3", config.Services["orders"].DB)
+	db, err := db.Connect(dbPath)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
@@ -29,7 +29,7 @@ func Start(config *configuration.Config) {
 	grpcServer := grpc.NewServer()
 	ordersService := OrdersServiceServer{db: db}
 	pb.RegisterOrdersServiceServer(grpcServer, &ordersService)
-	lis, err := net.Listen("tcp", config.Host+":"+config.Services["orders"].Port)
+	lis, err := net.Listen("tcp", host+":"+port)
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}

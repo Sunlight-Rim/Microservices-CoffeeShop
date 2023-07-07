@@ -1,7 +1,7 @@
 package users
 
 import (
-	pb "coffeeshop/internal/users/pb"
+	pb "coffeeshop/internal/users/grpc/pb"
 	"context"
 	"crypto/sha1"
 	"encoding/base64"
@@ -19,7 +19,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-/// API METHODS IMPLEMENTATION
+/// BUSINESS LOGIC LAYER
 
 func getUserID(ctx *context.Context) uint32 {
 	// exception handling can be skipped here due to Auth() middleware

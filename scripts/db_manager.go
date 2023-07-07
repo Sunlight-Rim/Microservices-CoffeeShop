@@ -12,17 +12,17 @@ import (
 )
 
 /// DB MANAGER
-// A script for creating and filling a databases
+// A script for initial creation and fill a databases
 
 // ORDERS DB
 
 func ordersManage(dbPath string) error {
-	// Remove DataBase
+	// Remove db
 	if err := os.Remove(dbPath); err != nil {
 		log.Println("Orders DB already no exists")
 	}
 
-	// Create DataBase
+	// Create db
 	file, err := os.Create(dbPath)
 	if err != nil {
 		return err
@@ -30,15 +30,15 @@ func ordersManage(dbPath string) error {
 	file.Close()
 	log.Println("Orders DB created successfully!")
 
-	// Connect to DataBase
+	// Connect to db
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
-	// Create Tables
-	createTables := 
+	// Create tables
+	createTables :=
 		`CREATE TABLE coffee (
 			coffeeID INTEGER PRIMARY KEY AUTOINCREMENT,
 			name VARCHAR(60) UNIQUE NOT NULL,
@@ -87,12 +87,12 @@ func ordersManage(dbPath string) error {
 // USERS DB
 
 func usersManage(dbPath string) error {
-	// Remove DataBase
+	// Remove db
 	if err := os.Remove(dbPath); err != nil {
 		log.Println("Users DB already no exists")
 	}
 
-	// Create DataBase
+	// Create db
 	file, err := os.Create(dbPath)
 	if err != nil {
 		return err
@@ -100,15 +100,15 @@ func usersManage(dbPath string) error {
 	file.Close()
 	log.Println("Users DB created successfully!")
 
-	// Connect to DataBase
+	// Connect to db
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
-	// Create Tables
-	createTables := 
+	// Create tables
+	createTables :=
 		`CREATE TABLE user (
 			userID INTEGER PRIMARY KEY AUTOINCREMENT,
 			username VARCHAR(30) NOT NULL,
@@ -139,8 +139,10 @@ func usersManage(dbPath string) error {
 	return nil
 }
 
+const configPath = "config/config.yaml"
+
 func main() {
-	config := configuration.New()
+	config := configuration.New(configPath)
 
 	if err := ordersManage(config.Services["orders"].DB); err != nil {
 		log.Println(err)

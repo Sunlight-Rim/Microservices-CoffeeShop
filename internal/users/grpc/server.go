@@ -1,8 +1,8 @@
 package users
 
 import (
-	configuration "coffeeshop/config"
-	pb "coffeeshop/internal/users/pb"
+	db "coffeeshop/internal/users/database"
+	pb "coffeeshop/internal/users/grpc/pb"
 	"database/sql"
 
 	"log"
@@ -12,16 +12,16 @@ import (
 	"google.golang.org/grpc"
 )
 
-/// gRPC SERVER
+/// TRANSPORT LAYER (gRPC)
 
 type UsersServiceServer struct {
 	pb.UnimplementedUsersServiceServer
 	db *sql.DB
 }
 
-func Start(config *configuration.Config) {
+func Start(host, port, dbPath string) {
 	// Connect to DB
-	db, err := sql.Open("sqlite3", config.Services["users"].DB)
+	db, err := db.Connect(dbPath)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
@@ -29,7 +29,7 @@ func Start(config *configuration.Config) {
 	grpcServer := grpc.NewServer()
 	UsersService := UsersServiceServer{db: db}
 	pb.RegisterUsersServiceServer(grpcServer, &UsersService)
-	lis, err := net.Listen("tcp", config.Host+":"+config.Services["users"].Port)
+	lis, err := net.Listen("tcp", host+":"+port)
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}

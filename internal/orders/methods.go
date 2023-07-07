@@ -1,7 +1,7 @@
 package orders
 
 import (
-	pb "coffeeshop/internal/orders/pb"
+	pb "coffeeshop/internal/orders/grpc/pb"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -14,7 +14,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-/// API METHODS IMPLEMENTATION
+/// BUSINESS LOGIC LAYER
 
 func getUserID(ctx *context.Context) uint32 {
 	// exception handling can be skipped here due to Auth() middleware
