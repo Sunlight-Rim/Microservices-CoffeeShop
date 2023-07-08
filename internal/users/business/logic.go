@@ -22,6 +22,7 @@ func New(repo *db.Repo) Logic {
 	return Logic{repo: repo}
 }
 
+// Create user
 func (l *Logic) Create(username, password, address string) (*domain.User, error) {
 	// Validation
 	if username == "" {
@@ -56,6 +57,7 @@ func (l *Logic) Create(username, password, address string) (*domain.User, error)
 	}, nil
 }
 
+// Check if username and password is valid
 func (l *Logic) Login(username, password string) (error) {
 	// Validation
 	if username == "" {
@@ -75,7 +77,7 @@ func (l *Logic) Login(username, password string) (error) {
 	return nil
 }
 
-// func (s *UsersServiceServer) GetMe(ctx context.Context, empty *empty.Empty) (*pb.GetMeUserResponse, error) {
+// Get info about user himself
 func (l *Logic) GetMe(userID uint32) (*domain.User, error) {
 	user, err := l.repo.GetUserById(userID)
 	if err != nil {

@@ -16,6 +16,7 @@ func New(repo *db.Repo) Logic {
 	return Logic{repo: repo}
 }
 
+// Register new user
 func (l *Logic) Signup(username, password, address string,
 						  createUser func(username, password, address string) (uint32, *time.Time, error),
 						  ) (*domain.User, error) {
