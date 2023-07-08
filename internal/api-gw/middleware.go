@@ -11,7 +11,7 @@ import (
 
 /// MIDDLEWARE
 
-func Auth(tokenHash hash.Hash) gin.HandlerFunc {
+func AuthMW(tokenHash hash.Hash) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader, ok := c.Request.Header["Authorization"]
 		if !ok {

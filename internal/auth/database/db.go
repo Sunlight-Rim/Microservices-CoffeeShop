@@ -1,4 +1,4 @@
-package db
+package databse
 
 /// REPOSITORY LAYER
 

@@ -46,8 +46,8 @@ func Start(host, port, jwtKey, authUrl, authPort, usersUrl, userPort, ordersUrl,
 	}
 	tokenHash := hmac.New(sha256.New, []byte(jwtKey))
 	registerMux(authUrl, gin.WrapF(authMux.ServeHTTP))
-	registerMux(usersUrl, Auth(tokenHash), gin.WrapF(usersMux.ServeHTTP))
-	registerMux(ordersUrl, Auth(tokenHash), gin.WrapF(ordersMux.ServeHTTP))
+	registerMux(usersUrl, AuthMW(tokenHash), gin.WrapF(usersMux.ServeHTTP))
+	registerMux(ordersUrl, AuthMW(tokenHash), gin.WrapF(ordersMux.ServeHTTP))
 	// Start server
 	if err := router.Run(":" + port); err != nil {
 		log.Fatal(err)

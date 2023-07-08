@@ -3,9 +3,9 @@ syntax = "proto3";
 package auth;
 
 import "google/protobuf/timestamp.proto";
-import "internal/auth/proto/annotations.proto";
+import "internal/auth/grpc/proto/annotations.proto";
 
-option go_package = ".;auth_pb";
+option go_package = ".;pb";
 
 
 service AuthService {

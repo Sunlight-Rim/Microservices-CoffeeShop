@@ -1,109 +1,87 @@
-package users
+package business
 
 import (
-	pb "coffeeshop/internal/users/grpc/pb"
-	"context"
+	db "coffeeshop/internal/users/database"
+	"coffeeshop/internal/users/domain"
+
 	"crypto/sha1"
-	"encoding/base64"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"log"
-	"strings"
 	"time"
 	"unicode/utf8"
-
-	empty "github.com/golang/protobuf/ptypes/empty"
-
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-/// BUSINESS LOGIC LAYER
+/// APPLICATION BUSINESS LOGIC LAYER
 
-func getUserID(ctx *context.Context) uint32 {
-	// exception handling can be skipped here due to Auth() middleware
-	md, _ := metadata.FromIncomingContext(*ctx)
-	tokenPayload, _ := base64.StdEncoding.DecodeString(strings.Split(strings.Split(md["authorization"][0], " ")[1], ".")[1] + "==")
-	var payload map[string]uint32
-	json.Unmarshal(tokenPayload, &payload)
-	return payload["id"]
+type Logic struct {
+	repo *db.Repo
 }
 
-func (s *UsersServiceServer) Create(ctx context.Context, in *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
-	// Validate input
-	if in.GetUsername() == "" {
-		return nil, errors.New("enter correct username")
+func New(repo *db.Repo) Logic {
+	return Logic{repo: repo}
+}
+
+func (l *Logic) Create(username, password, address string) (*domain.User, error) {
+	// Validation
+	if username == "" {
+		return nil, errors.New("username is empty")
 	}
-	if in.GetAddress() == "" {
-		return nil, errors.New("enter correct address")
+	if address == "" {
+		return nil, errors.New("address is empty")
 	}
-	if utf8.RuneCountInString(in.GetPassword()) < 6 {
+	if utf8.RuneCountInString(password) < 6 {
 		return nil, errors.New("password must exceed 6 chars")
 	}
 	// Check if name is already exist
-	var id int64
-	if s.db.QueryRow(
-		`SELECT userID FROM user WHERE username = $1`,
-		in.GetUsername()).Scan(&id); id != 0 {
+	existence := l.repo.DoesUsernameExists(username)
+	if existence {
 		return nil, errors.New("this username is already exists")
 	}
-	// Fill a new row
-	regdate := time.Now()
-	user := pb.User{
-		Username: in.GetUsername(),
-		Address:  in.GetAddress(),
-		Regdate:  timestamppb.New(regdate),
-	}
-	// Hash the pass
+	// Hash the password
 	hasher := sha1.New()
-	hasher.Write([]byte(in.GetPassword()))
-	// Insert to DB
-	res, err := s.db.Exec(
-		`INSERT INTO user (username, passwordHash, address, date) VALUES ($1, $2, $3, $4)`,
-		user.Username, hex.EncodeToString(hasher.Sum(nil)), user.Address, regdate)
+	hasher.Write([]byte(password))
+	// Append to DB
+	date := time.Now()
+	userID, err := l.repo.CreateUser(username, hex.EncodeToString(hasher.Sum(nil)), address, date)
 	if err != nil {
 		log.Printf("DB request error: %v", err)
 		return nil, errors.New("there is some problem with DB")
 	}
-	id, _ = res.LastInsertId()
-	user.Id = uint32(id)
-	return &pb.CreateUserResponse{User: &user}, nil
+	return &domain.User{
+		Id: userID,
+		Username: username,
+		Address:  address,
+		Regdate:  date,
+	}, nil
 }
 
-func (s *UsersServiceServer) Login(ctx context.Context, in *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
-	// Validate input
-	if in.GetUsername() == "" {
-		return nil, errors.New("enter correct username")
+func (l *Logic) Login(username, password string) (error) {
+	// Validation
+	if username == "" {
+		return errors.New("username is empty")
 	}
-	// Login by username
-	var passwordHash string
-	if s.db.QueryRow(
-		`SELECT passwordHash FROM user WHERE username = $1`,
-		in.GetUsername()).Scan(&passwordHash); passwordHash == "" {
-		return nil, errors.New("username is wrong")
+	// Password hash by username
+	passwordHash, err := l.repo.GetPasswordHashByName(username)
+	if err != nil {
+		return errors.New("username is wrong")
 	}
-	// Login by pass
+	// Hashes verification
 	hasher := sha1.New()
-	hasher.Write([]byte(in.GetPassword()))
+	hasher.Write([]byte(password))
 	if passwordHash != hex.EncodeToString(hasher.Sum(nil)) {
-		return nil, errors.New("password is wrong")
+		return errors.New("password is wrong")
 	}
-	return &pb.LoginUserResponse{Access: true}, nil
+	return nil
 }
 
-func (s *UsersServiceServer) GetMe(ctx context.Context, empty *empty.Empty) (*pb.GetMeUserResponse, error) {
-	user := &pb.User{
-		Id: getUserID(&ctx),
+// func (s *UsersServiceServer) GetMe(ctx context.Context, empty *empty.Empty) (*pb.GetMeUserResponse, error) {
+func (l *Logic) GetMe(userID uint32) (*domain.User, error) {
+	user, err := l.repo.GetUserById(userID)
+	if err != nil {
+		return nil, errors.New("there is some problem with DB")
 	}
-	var date time.Time
-	if err := s.db.QueryRow(
-		`SELECT username, address, date FROM user WHERE userID = $1`,
-		user.Id).Scan(&user.Username, &user.Address, &date); err != nil {
-		return nil, errors.New("specified id is wrong")
-	}
-	user.Regdate = timestamppb.New(date)
-	return &pb.GetMeUserResponse{User: user}, nil
+	return user, nil
 }
 
 // func (s *UsersServiceServer) GetOther(context.Context, *pb.GetOtherUserRequest) (*pb.GetOtherUserResponse, error) {

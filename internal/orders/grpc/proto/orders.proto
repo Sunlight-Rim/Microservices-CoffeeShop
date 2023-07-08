@@ -3,10 +3,10 @@ syntax = "proto3";
 package orders;
 
 import "google/protobuf/timestamp.proto";
-import "internal/orders/proto/annotations.proto";
+import "internal/orders/grpc/proto/annotations.proto";
 // import "internal/orders/proto/options.annotations.proto";
 
-option go_package = ".;orders_pb";
+option go_package = ".;pb";
 
 
 service OrdersService {

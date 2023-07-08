@@ -1,4 +1,4 @@
-package db
+package database
 
 import (
 	"coffeeshop/internal/orders/domain"
@@ -42,44 +42,54 @@ func (repo *Repo) CreateOrder(userID, coffeeID, toppingID, sugar uint32, date ti
 	return uint32(id), err
 }
 
-func (repo *Repo) GetOrder(userID, orderID uint32) (order *domain.Order, err error) {
+func (repo *Repo) GetOrderById(userID, orderID uint32) (order *domain.Order, err error) {
 	var toppingPrice float32
 	err = repo.QueryRow(`
 		SELECT coffee.name, coffee.price, topping.name, topping.price, sugar, status, date
 		FROM order_ INNER JOIN
 			coffee ON order_.coffeeID = coffee.coffeeID INNER JOIN
 			topping ON order_.toppingID = topping.toppingID
-		WHERE order_.orderID = $1 AND order_.userID = $2;
-		`, orderID, userID).Scan(&order.Coffee, &order.Total, &order.Topping,
+		WHERE order_.userID = $1 AND order_.orderID = $2;
+		`, userID, orderID).Scan(&order.Coffee, &order.Total, &order.Topping,
 								 &toppingPrice, &order.Sugar, &order.Status, &order.Date)
-		order.Total += toppingPrice
+	order.Total += toppingPrice
 	return
 }
 
-func (repo *Repo) GetSome(userID, shift uint32) (orders []*domain.Order, err error) {
+func (repo *Repo) GetOrdersByShift(userID, shift, limit uint32) (orders []*domain.Order, err error) {
 	rows, err := repo.Query(`
 	SELECT orderID, coffee.name, coffee.price, topping.name, topping.price, sugar, status, date
 	FROM order_ INNER JOIN
 		coffee ON order_.coffeeID = coffee.coffeeID INNER JOIN
 		topping ON order_.toppingID = topping.toppingID
 	WHERE order_.userID = $1
-	LIMIT 5 OFFSET $2;
-	`, userID, shift)
-	if err != nil {
-		return nil, err
-	}
+	LIMIT $2 OFFSET $3;
+	`, userID, limit, shift)
+	if err != nil { return nil, err }
 	defer rows.Close()
-	
+	// Append rows to orders slice
 	var toppingPrice float32
 	for rows.Next() {
 		order := domain.Order{Userid: userID}
 		if err := rows.Scan(&order.Id, &order.Coffee, &order.Total, &order.Topping,
-				  		 	&toppingPrice, &order.Sugar, &order.Status, &order.Date);
-		err != nil {
-			return nil, err
-		}
+							&toppingPrice, &order.Sugar, &order.Status, &order.Date);
+		err != nil { return nil, err }
 		order.Total += toppingPrice
 		orders = append(orders, &order)
 	}
+	return
+}
+
+func (repo *Repo) SetStatusCancelled(userID, orderID uint32) (err error) {
+	_, err = repo.Exec(
+		`UPDATE order_ SET status = 2 WHERE userID = $1 AND orderID = $2;`,
+		userID, orderID)
+	return
+}
+
+func (repo *Repo) DeleteById(userID, orderID uint32) (err error) {
+	_, err = repo.Exec(
+		`DELETE FROM order_ WHERE userID = $1 AND orderID = $2;`,
+		userID, orderID)
 	return
 }

@@ -1,6 +1,6 @@
 # Microservices application
 
-Simple application with microservice architecture pattern on Go.
+Simple application with microservice pattern and clean architecture on Go.
 
 ## Description
 ### **Coffee shop web-application.**
@@ -10,17 +10,17 @@ You can register, login, order some coffee, view the history of your coffee orde
 Application architecture:
 ![schema](https://i.imgur.com/Z6z7mAs.jpg)
 
-There are Auth authentication service by JWT tokens, Orders and Users services that realizes CRUD operations. All these services are connected to API Gateway via gRPC and are calling externally via REST. Auth also connected to Users for registration. Endpoints and API methods you can see in [Documentation](/docs/documentation.md). \
+There are Auth authentication service works by JWT tokens, Orders and Users services that realizes CRUD operations. All these services are connected to API Gateway via gRPC and are calling externally via REST. Auth also connected to Users for registration. Endpoints and API methods you can see in [Documentation](/docs/documentation.md). \
 The folders structure was inspired by [Standard Go Project Layout](https://github.com/golang-standards/project-layout) and persist in each service. Here are:
 - `api`: some REST requests examples
+- `docs`: complete documentation
 - `cmd`: contains entry point of application
 - `config`: stores all app configurations
-- `docs`: complete documentation of app
-- `scripts`: standalone scripts for this app
-- `internal/<service>/database`: microservice database files
-- `internal/<service>/proto`: gRPC definitions for microservices
-- `internal/<service>/pb`: generated code from protobuffers
-- `internal/<service>`: implementation of microservices methods
+- `scripts`: standalone scripts for app
+- `internal/<service>/domain`: domain layer with microservice entities
+- `internal/<service>/business`: implementation of microservices business logic
+- `internal/<service>/database`: microservice repository layer, contains database files
+- `internal/<service>/grpc`: transport layer, contains gRPC server, adapters and generated code
 
 `go.mod` and `go.sum` is a Go Modules files.
 

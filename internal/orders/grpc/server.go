@@ -3,7 +3,7 @@ package transport
 import (
 	"coffeeshop/internal/orders/business"
 	db "coffeeshop/internal/orders/database"
-	pb "coffeeshop/internal/orders/grpc/pb"
+	"coffeeshop/internal/orders/grpc/pb"
 
 	"log"
 	"net"
@@ -16,25 +16,22 @@ import (
 
 type OrdersServiceServer struct {
 	pb.UnimplementedOrdersServiceServer
-	business business.Business
+	logic business.Logic
 }
 
 func Start(host, port, dbPath string) {
 	// Connect to DB
 	repo, err := db.Connect(dbPath)
-	if err != nil {
-		log.Fatalf("%v", err)
-	}
-	// Start gRPC server
+	if err != nil { log.Fatalf("%v", err) }
+	// Init gRPC server
 	grpcServer := grpc.NewServer()
 	ordersService := OrdersServiceServer{
-		business: business.New(&repo),
+		logic: business.New(&repo),
 	}
 	pb.RegisterOrdersServiceServer(grpcServer, &ordersService)
+	// Start gRPC server
 	lis, err := net.Listen("tcp", host+":"+port)
-	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
-	}
+	if err != nil { log.Fatalf("Failed to listen: %v", err) }
 	log.Printf("Orders server listening at %v", lis.Addr())
 	go func() {
 		if err := grpcServer.Serve(lis); err != nil {

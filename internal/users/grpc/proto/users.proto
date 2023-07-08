@@ -4,9 +4,9 @@ package users;
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
-import "internal/users/proto/annotations.proto";
+import "internal/users/grpc/proto/annotations.proto";
 
-option go_package = ".;users_pb";
+option go_package = ".;pb";
 
 
 service UsersService {
