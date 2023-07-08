@@ -1,9 +1,9 @@
-package orders
+package transport
 
 import (
+	"coffeeshop/internal/orders/business"
 	db "coffeeshop/internal/orders/database"
 	pb "coffeeshop/internal/orders/grpc/pb"
-	"database/sql"
 
 	"log"
 	"net"
@@ -12,22 +12,24 @@ import (
 	"google.golang.org/grpc"
 )
 
-/// TRANSPORT LAYER (gRPC)
+/// TRANSPORT LAYER (gRPC server)
 
 type OrdersServiceServer struct {
 	pb.UnimplementedOrdersServiceServer
-	db *sql.DB
+	business business.Business
 }
 
 func Start(host, port, dbPath string) {
 	// Connect to DB
-	db, err := db.Connect(dbPath)
+	repo, err := db.Connect(dbPath)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
 	// Start gRPC server
 	grpcServer := grpc.NewServer()
-	ordersService := OrdersServiceServer{db: db}
+	ordersService := OrdersServiceServer{
+		business: business.New(&repo),
+	}
 	pb.RegisterOrdersServiceServer(grpcServer, &ordersService)
 	lis, err := net.Listen("tcp", host+":"+port)
 	if err != nil {
@@ -38,6 +40,6 @@ func Start(host, port, dbPath string) {
 		if err := grpcServer.Serve(lis); err != nil {
 			log.Fatalf("Failed to start gRPC server: %v", err)
 		}
-		defer db.Close()
+		defer repo.Close()
 	}()
 }

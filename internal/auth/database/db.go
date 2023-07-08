@@ -2,7 +2,11 @@ package db
 
 /// REPOSITORY LAYER
 
+type Repo struct {
+	_ map[string]uint32
+}
+
 // Connect to DB
-func Connect() map[string]uint32 {
-	return make(map[string]uint32)
+func Connect() (Repo, error) {
+	return Repo{make(map[string]uint32)}, nil
 }
