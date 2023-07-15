@@ -28,11 +28,13 @@ func Start(host, port, dbPort, usersPort string) {
 	// Connect to Users
 	usersConn, err := grpc.Dial(host+":"+usersPort, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil { log.Fatalf("Didn't connect to gRPC: %v", err) }
+	// Init logic
+	logic := *business.New(&repo)
 	// Init gRPC server
 	grpcServer := grpc.NewServer()
 	authService := AuthServiceServer{
 		users: pbUsers.NewUsersServiceClient(usersConn),
-		logic: business.New(&repo),
+		logic: logic,
 	}
 	pb.RegisterAuthServiceServer(grpcServer, &authService)
 	// Start gRPC server

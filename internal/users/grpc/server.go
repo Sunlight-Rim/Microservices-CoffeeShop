@@ -23,10 +23,12 @@ func Start(host, port, dbPath string) {
 	// Connect to DB
 	repo, err := db.Connect(dbPath)
 	if err != nil { log.Fatalf("%v", err) }
+	// Init logic
+	logic := *business.New(&repo)
 	// Init gRPC server
 	grpcServer := grpc.NewServer()
 	usersService := UsersServiceServer{
-		logic: business.New(&repo),
+		logic: logic,
 	}
 	pb.RegisterUsersServiceServer(grpcServer, &usersService)
 	// Start gRPC server

@@ -13,7 +13,7 @@ import (
 /// TRANSPORT LAYER (gRPC adapters)
 
 func (s *AuthServiceServer) Signup(ctx context.Context, in *pb.SignupAuthRequest) (*pb.SignupAuthResponse, error) {
-	// Using the Users service to create a new user in Users service DB
+	// createUser uses the Users service to create a new user in Users service DB
 	createUser := func(username, password, address string) (uint32, *time.Time, error) {
 		resp, err := s.users.Create(ctx, &pbUsers.CreateUserRequest{
 			Username: username,

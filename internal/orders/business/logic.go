@@ -1,7 +1,6 @@
 package business
 
 import (
-	db "coffeeshop/internal/orders/database"
 	"coffeeshop/internal/orders/domain"
 	"errors"
 	"log"
@@ -10,12 +9,22 @@ import (
 
 /// APPLICATION BUSINESS LOGIC LAYER
 
-type Logic struct {
-	repo *db.Repo
+type Repository interface {
+	GetCoffeeIdAndPriceByName(string) (uint32, float32, error)
+	GetToppingIdAndPriceByName(string) (uint32, float32, error)
+	CreateOrder(uint32, uint32, uint32, uint32, time.Time) (uint32, error)
+	GetOrderById(uint32, uint32) (*domain.Order, error)
+	GetOrdersByShift(uint32, uint32, uint32) ([]*domain.Order, error)
+	SetStatusCancelled(uint32, uint32) (error)
+	DeleteById(uint32, uint32) (error)
 }
 
-func New(repo *db.Repo) Logic {
-	return Logic{repo: repo}
+type Logic struct {
+	repo Repository
+}
+
+func New(repo Repository) *Logic {
+	return &Logic{repo: repo}
 }
 
 // Create order

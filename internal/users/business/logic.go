@@ -1,7 +1,6 @@
 package business
 
 import (
-	db "coffeeshop/internal/users/database"
 	"coffeeshop/internal/users/domain"
 
 	"crypto/sha1"
@@ -14,12 +13,19 @@ import (
 
 /// APPLICATION BUSINESS LOGIC LAYER
 
-type Logic struct {
-	repo *db.Repo
+type Repository interface {
+	DoesUsernameExists(string) (bool)
+	CreateUser(username string, passwordHash string, address string, date time.Time) (uint32, error)
+	GetPasswordHashByName(username string) (passwordHash string, err error)
+	GetUserById(userID uint32) (user *domain.User, err error)
 }
 
-func New(repo *db.Repo) Logic {
-	return Logic{repo: repo}
+type Logic struct {
+	repo Repository
+}
+
+func New(repo Repository) *Logic {
+	return &Logic{repo: repo}
 }
 
 // Create user

@@ -1,25 +1,29 @@
 package business
 
 import (
-	db "coffeeshop/internal/auth/database"
 	"coffeeshop/internal/auth/domain"
 	"time"
 )
 
 /// BUSINESS LOGIC LAYER
 
-type Logic struct {
-	repo *db.Repo
+type Repository interface{
+	// DB methods
 }
 
-func New(repo *db.Repo) Logic {
-	return Logic{repo: repo}
+type Logic struct {
+	repo Repository
+}
+
+func New(repo Repository) *Logic {
+	return &Logic{repo: repo}
 }
 
 // Register new user
 func (l *Logic) Signup(username, password, address string,
-						  createUser func(username, password, address string) (uint32, *time.Time, error),
-						  ) (*domain.User, error) {
+					   createUser func(username, password, address string) (uint32, *time.Time, error),
+					   ) (*domain.User, error) {
+	// createUser uses the Users service to create a new user in Users service DB
 	userID, userRegdate, err := createUser(username, password, address)
 	return &domain.User{
 		Id:       userID,
