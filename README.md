@@ -1,6 +1,6 @@
 # Microservices application
 
-Simple application with microservice pattern and clean architecture on Go.
+Example of simple application with microservice pattern on Go.
 
 ## Description
 ### **Coffee shop**
